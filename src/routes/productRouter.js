@@ -3,11 +3,15 @@ import ProductController from "../controllers/productController.js";
 import { generateFakeProduct } from "../utils/fakeProduct.js";
 import { errorTypes } from "../utils/errorTypes.js";
 import Product from "../dao/models/product.js";
+import { isAdmin } from "../middlewares/adminAuth.js";
+import { authenticate } from "../middlewares/authenticate.js";
+import { auth } from "../middlewares/auth.js";
 
 const productRouter = express.Router();
 const productController = new ProductController();
 
-productRouter.get("/", async (req, res) => {
+//probar middleware
+productRouter.get("/",auth ,async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 4;
         const page = parseInt(req.query.page) || 1;
@@ -45,7 +49,7 @@ productRouter.get("/mockingproducts", (req, res) => {
 productRouter.get("/view", productController.renderProductsPage);
 productRouter.get("/:pid", productController.getProductById);
 productRouter.get("/brand/:brand", productController.getByBrand);
-productRouter.post("/", productController.addProduct);
+productRouter.post('/addProduct', authenticate, isAdmin, (req, res, next) => productController.addProduct(req, res, next));
 productRouter.put("/:pid", productController.updateProduct);
 productRouter.delete("/:pid", productController.deleteProductById);
 

@@ -1,8 +1,9 @@
 import cartRepositorie from "../repositories/cartRepositorie.js";
-import Product from "../models/product.js";
-import ticketModel from "../models/ticket.js";
+import productRepositorie from "../repositories/productRepositorie.js"; 
 import { generateRandomCode } from "../../middlewares/auth.js";
 import CartDTO from "../DTO/CartDTO.js";
+import ticketRepositorie from "../repositories/ticketRepositorie.js";
+import TicketDTO from "../DTO/TicketDTO.js";
 
 const cartService = {
     async getCartById(cartId) {
@@ -14,7 +15,17 @@ const cartService = {
     },
 
     async addProduct(cartId, productId) {
-        return await cartRepositorie.addProduct(cartId, productId);
+        const product = await productRepositorie.getProductById(productId); 
+        if (!product) {
+            throw new Error(`Producto con ID ${productId} no encontrado`);
+        }
+
+        if (product.stock < 1) {
+            throw new Error("Producto fuera de stock");
+        }
+
+        const updatedCart = await cartRepositorie.addProduct(cartId, productId);
+        return updatedCart;
     },
 
     async deleteProduct(cartId, productId) {
@@ -32,7 +43,7 @@ const cartService = {
             const productsToKeepInCart = [];
 
             for (const item of cart.products) {
-                const product = await Product.findById(item.product);
+                const product = await productRepositorie.getProductById(item.product);
 
                 if (!product) {
                     throw new Error(`Producto con ID ${item.product} no encontrado`);
@@ -55,20 +66,19 @@ const cartService = {
 
             const cartDTO = new CartDTO(productsToPurchase, quantity, userId);
 
-            const ticket = new ticketModel({
+            const ticketDTO = new TicketDTO({
                 code: generateRandomCode(10),
                 purchase_datetime: new Date(),
                 amount: totalPurchaseAmount,
                 purchaser: userId,
                 products: productsToPurchase.map(item => ({
-                    id: item.product,
-                    product: item.product.title,
+                    product: item.product,
                     productQuantity: item.productQuantity,
                     productTotal: item.productTotal,
                 })),
             });
 
-            await ticket.save();
+            const ticket = await ticketRepositorie.createTicket(ticketDTO);
 
             cart.products = productsToKeepInCart;
             await cart.save();
