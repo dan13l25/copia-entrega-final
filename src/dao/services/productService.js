@@ -1,11 +1,12 @@
 import productRepositorie from "../repositories/productRepositorie.js";
+import { devLogger as logger } from "../../utils/loggers.js";
 
 const productService = {
     addProduct: async (title, description, price, thumbnails, code, stock, status, category, brand) => {
         try {
             await productRepositorie.addProduct(title, description, price, thumbnails, code, stock, status, category, brand);
         } catch (error) {
-            console.error("Error al añadir el producto:", error.message);
+            logger.error("Error al añadir el producto:", error.message);
             throw error;
         }
     },
@@ -14,7 +15,7 @@ const productService = {
         try {
             return await productRepositorie.readProducts();
         } catch (error) {
-            console.error("Error al leer los productos:", error.message);
+            logger.error("Error al leer los productos:", error.message);
             throw error;
         }
     },
@@ -23,7 +24,7 @@ const productService = {
         try {
             return await productRepositorie.getProducts(category, brand, sort);
         } catch (error) {
-            console.error("Error al obtener los productos:", error.message);
+            logger.error("Error al obtener los productos:", error.message);
             throw error;
         }
     },
@@ -32,7 +33,7 @@ const productService = {
         try {
             return await productRepositorie.getProductById(id);
         } catch (error) {
-            console.error("Error al obtener el producto:", error.message);
+            logger.error("Error al obtener el producto:", error.message);
             throw error;
         }
     },
@@ -41,7 +42,7 @@ const productService = {
         try {
             return await productRepositorie.getByBrand(brand);
         } catch (error) {
-            console.error("Error al obtener los productos por marca:", error.message);
+            logger.error("Error al obtener los productos por marca:", error.message);
             throw error;
         }
     },
@@ -50,7 +51,7 @@ const productService = {
         try {
             await productRepositorie.deleteProductById(pid);
         } catch (error) {
-            console.error("Error al eliminar el producto:", error.message);
+            logger.error("Error al eliminar el producto:", error.message);
             throw error;
         }
     },
@@ -59,7 +60,7 @@ const productService = {
         try {
             return await productRepositorie.updateProduct(pid, newData);
         } catch (error) {
-            console.error("Error al actualizar el producto:", error.message);
+            logger.error("Error al actualizar el producto:", error.message);
             throw error;
         }
     },
@@ -68,7 +69,7 @@ const productService = {
         try {
             return await productRepositorie.paginateProducts(options);
         } catch (error) {
-            console.error("Error al paginar los productos:", error.message);
+            logger.error("Error al paginar los productos:", error.message);
             throw error;
         }
     }

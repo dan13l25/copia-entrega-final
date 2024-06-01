@@ -6,6 +6,7 @@ const userRepository = {
             const user = await userModel.findOne({ email });
             return user;
         } catch (error) {
+            logger.error("Error al buscar usuario por correo electrónico:", error.message);
             throw new Error("Error al buscar usuario por correo electrónico: " + error.message);
         }
     },
@@ -20,6 +21,7 @@ const userRepository = {
                 return user;
             }
         } catch (error) {
+            logger.error("Error al buscar usuario por ID:", error.message);
             throw new Error("Error al buscar usuario por ID: " + error.message);
         }
     },    
@@ -30,6 +32,7 @@ const userRepository = {
             await newUser.save();
             return newUser;
         } catch (error) {
+            logger.error("Error al crear usuario:", error.message);
             throw new Error("Error al crear usuario: " + error.message);
         }
     },

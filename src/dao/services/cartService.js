@@ -4,6 +4,7 @@ import { generateRandomCode } from "../../middlewares/auth.js";
 import CartDTO from "../DTO/CartDTO.js";
 import ticketRepositorie from "../repositories/ticketRepositorie.js";
 import TicketDTO from "../DTO/TicketDTO.js";
+import { devLogger as logger } from "../../utils/loggers.js";
 
 const cartService = {
     async getCartById(cartId) {
@@ -85,6 +86,7 @@ const cartService = {
 
             return ticket;
         } catch (error) {
+            logger.error("Error al realizar la compra:", error.message);
             throw new Error("Error al realizar la compra: " + error.message);
         }
     },

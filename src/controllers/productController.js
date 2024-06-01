@@ -3,6 +3,7 @@ import ProductDTO from "../dao/DTO/productDTO.js";
 import { errorTypes } from "../utils/errorTypes.js";
 import { succesTypes } from "../utils/errorTypes.js";
 import { CustomError } from "../utils/customError.js"; 
+import { devLogger as logger } from "../utils/loggers.js";
 
 export default class ProductController {
     constructor() {
@@ -38,6 +39,7 @@ export default class ProductController {
             );
             res.status(succesTypes.SUCCESS_CREATED).json({ message: "Producto añadido correctamente" });
         } catch (error) {
+            logger.error("Error al añadir el producto:", error.message);
             next(CustomError.createError({
                 name: "AddProductError",
                 message: "Error al añadir el producto",
@@ -52,6 +54,7 @@ export default class ProductController {
             const products = await productService.readProducts();
             res.json(products);
         } catch (error) {
+            logger.error("Error al leer los productos:", error.message);
             next(CustomError.createError({
                 name: "ReadProductsError",
                 message: "Error al leer los productos",
@@ -68,6 +71,7 @@ export default class ProductController {
             const products = await productService.getProducts(category, brand, sort);
             res.json(products);
         } catch (error) {
+            logger.error("Error al obtener los productos:", error.message);
             next(CustomError.createError({
                 name: "GetProductsError",
                 message: "Error al obtener los productos",
@@ -91,6 +95,7 @@ export default class ProductController {
             }
             res.json(product);
         } catch (error) {
+            logger.error("Error al obtener el producto:", error.message);
             next(CustomError.createError({
                 name: "GetProductByIdError",
                 message: "Error al obtener el producto",
@@ -107,6 +112,7 @@ export default class ProductController {
             const products = await productService.getByBrand(brand);
             res.json(products);
         } catch (error) {
+            logger.error("Error al obtener los productos por marca:", error.message);
             next(CustomError.createError({
                 name: "GetByBrandError",
                 message: "Error al obtener los productos por marca",
@@ -123,6 +129,7 @@ export default class ProductController {
             await productService.deleteProductById(pid);
             res.json({ message: "Producto eliminado correctamente" });
         } catch (error) {
+            logger.error("Error al eliminar el producto:", error.message);
             next(CustomError.createError({
                 name: "DeleteProductByIdError",
                 message: "Error al eliminar el producto",
@@ -140,6 +147,7 @@ export default class ProductController {
             const updatedProduct = await productService.updateProduct(pid, newData);
             res.json(updatedProduct);
         } catch (error) {
+            logger.error("Error al actualizar el producto:", error.message);
             next(CustomError.createError({
                 name: "UpdateProductError",
                 message: "Error al actualizar el producto",
@@ -167,6 +175,7 @@ export default class ProductController {
 
             res.render("product", { products, totalPages, currentPage });
         } catch (error) {
+            logger.error("Error al renderizar la página de productos paginados:", error.message);
             next(CustomError.createError({
                 name: "RenderProductsPageError",
                 message: "Error al renderizar la página de productos paginados",

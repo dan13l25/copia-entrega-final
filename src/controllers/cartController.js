@@ -1,6 +1,7 @@
 import cartService from "../dao/services/cartService.js";
 import { errorTypes } from "../utils/errorTypes.js";
-import { CustomError } from "../utils/customError.js"; // Importa CustomError
+import { CustomError } from "../utils/customError.js"; 
+import { devLogger as logger } from "../utils/loggers.js";
 
 export default class CartController {
     constructor() {
@@ -22,6 +23,7 @@ export default class CartController {
                 }));
             }
         } catch (error) {
+            logger.error("Error al obtener el carrito:", error.message);
             next(CustomError.createError({
                 name: "GetCartError",
                 message: "Error al obtener el carrito",
@@ -36,6 +38,7 @@ export default class CartController {
             const newCart = await cartService.createCart();
             res.status(201).json(newCart);
         } catch (error) {
+            logger.error("Error al crear el carrito:", error.message);
             next(CustomError.createError({
                 name: "CreateCartError",
                 message: "Error al crear el carrito",
@@ -51,6 +54,7 @@ export default class CartController {
             await cartService.addProduct(cartId, productId);
             res.send("Producto añadido al carrito correctamente");
         } catch (error) {
+            logger.error("Error al añadir producto al carrito:", error.message);
             next(CustomError.createError({
                 name: "AddProductError",
                 message: "Error al añadir producto al carrito",
@@ -66,6 +70,7 @@ export default class CartController {
             await cartService.deleteProduct(cartId, productId);
             res.send("Producto eliminado del carrito correctamente");
         } catch (error) {
+            logger.error("Error al eliminar producto del carrito:", error.message);
             next(CustomError.createError({
                 name: "DeleteProductError",
                 message: "Error al eliminar producto del carrito",
@@ -82,6 +87,7 @@ export default class CartController {
             const ticket = await cartService.buyCart(cartId, cartData);
             res.json(ticket);
         } catch (error) {
+            logger.error("Error al realizar la compra:", error.message);
             next(CustomError.createError({
                 name: "BuyCartError",
                 message: "Error al realizar la compra",
@@ -103,6 +109,7 @@ export default class CartController {
             const purchaseCartView = await cartService.getPurchaseCart();
             res.render(purchaseCartView, { user, isAuthenticated, jwtToken, cart });
         } catch (error) {
+            logger.error("Error al obtener el carrito de compra:", error.message);
             next(CustomError.createError({
                 name: "GetBuyCartError",
                 message: "Error al obtener el carrito de compra",

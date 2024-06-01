@@ -4,6 +4,7 @@ import { generateToken } from "../../config/jwtConfig.js";
 import { createHash, isValidPassword } from "../../utils.js";
 import { ADMIN_EMAIL, ADMIN_PASSWORD } from "../../utils.js";
 import UserDTO from "../dto/UserDTO.js";
+import { devLogger as logger } from "../../utils/loggers.js";
 
 const userService = {
     login: async (email, password) => {
@@ -28,12 +29,18 @@ const userService = {
 
             return { user, access_token };
         } catch (error) {
+            logger.error("Error al iniciar sesión:", error.message);
             throw error;
         }
     },
 
     getRegister: async () => {
-        return "register";
+        try {
+            return "register";
+        } catch (error) {
+            logger.error("Error al obtener la vista de registro:", error.message);
+            throw error;
+        }
     },
 
     register: async (userData) => {
@@ -55,6 +62,7 @@ const userService = {
 
             return { newUser, access_token };
         } catch (error) {
+            logger.error("Error al registrar usuario:", error.message);
             throw error;
         }
     },
@@ -73,6 +81,7 @@ const userService = {
 
             return "Password actualizado";
         } catch (error) {
+            logger.error("Error al restaurar la contraseña:", error.message);
             throw error;
         }
     },
@@ -83,14 +92,14 @@ const userService = {
             
             req.session.destroy((err) => {
                 if (err) {
-                    console.error("Error al cerrar sesión:", err);
+                    logger.error("Error al cerrar sesión:", err.message);
                     return res.status(500).json({ error: "Error interno del servidor" });
                 }
                 
                 res.redirect("/login");
             });
         } catch (error) {
-            console.error("Error al cerrar sesión:", error);
+            logger.error("Error al cerrar sesión:", error.message);
             res.status(500).json({ error: "Error interno del servidor" });
         }
     },

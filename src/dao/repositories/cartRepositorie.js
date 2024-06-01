@@ -1,12 +1,13 @@
 import cartsModel from "../models/cart.js";
 import Product from "../models/product.js";
+import { devLogger as logger } from "../../utils/loggers.js";
 
 const cartRepositorie = {
     async getCartById(cartId) {
         try {
             return await cartsModel.findById(cartId).lean();
         } catch (error) {
-            console.error("Error al obtener el carrito:", error.message);
+            logger.error("Error al obtener el carrito:", error.message);
             throw error;
         }
     },
@@ -17,7 +18,7 @@ const cartRepositorie = {
             await newCart.save();
             return newCart;
         } catch (error) {
-            console.error("Error al crear el carrito:", error.message);
+            logger.error("Error al crear el carrito:", error.message);
             throw error;
         }
     },
@@ -43,7 +44,7 @@ const cartRepositorie = {
 
             await cart.save();
         } catch (error) {
-            console.error("Error al añadir producto al carrito:", error.message);
+            logger.error("Error al añadir producto al carrito:", error.message);
             throw error;
         }
     },
@@ -63,7 +64,7 @@ const cartRepositorie = {
                 throw new Error("El producto no está en el carrito.");
             }
         } catch (error) {
-            console.error("Error al eliminar producto del carrito:", error.message);
+            logger.error("Error al eliminar producto del carrito:", error.message);
             throw error;
         }
     }
