@@ -8,7 +8,7 @@ import productService from "./dao/services/productService.js";
 import { middlewareConfig } from "./config/middlewareConfig.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { addLogger } from "./utils/loggers-env.js";
-
+ 
 const app = express();
 const port = process.env.PORT || 8080;
 const server = app.listen(port, () => console.log("Servidor operando en puerto", port));
