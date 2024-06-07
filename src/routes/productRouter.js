@@ -6,6 +6,7 @@ import Product from "../dao/models/product.js";
 import { isAdmin } from "../middlewares/adminAuth.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { auth } from "../middlewares/auth.js";
+import { upload } from "../utils.js";
 
 const productRouter = express.Router();
 const productController = new ProductController();
@@ -35,6 +36,19 @@ productRouter.get("/",auth ,async (req, res) => {
     }
 });
 
+// Ruta para actualizar un producto y añadirle una imagen
+productRouter.put("/updateProductImage/:pid", upload.single('thumbnail'), (req, res, next) => {
+    const { pid } = req.params;
+    const thumbnail = req.file ? req.file.path : null;
+
+    if (!thumbnail) {
+        return res.status(400).json({ message: "Image file is required" });
+    }
+
+    req.body.thumbnail = thumbnail;
+    productController.updateProductImage(req, res, next);
+});
+
 productRouter.get("/mockingproducts", (req, res) => {
     try {
         const fakeProducts = generateFakeProduct();
@@ -49,7 +63,11 @@ productRouter.get("/mockingproducts", (req, res) => {
 productRouter.get("/view", productController.renderProductsPage);
 productRouter.get("/:pid", productController.getProductById);
 productRouter.get("/brand/:brand", productController.getByBrand);
-productRouter.post('/addProduct', authenticate, isAdmin, (req, res, next) => productController.addProduct(req, res, next));
+productRouter.post('/addProduct', authenticate, isAdmin, upload.array('thumbnails', 5), (req, res, next) => {
+    const thumbnails = req.files.map(file => file.path); 
+    req.body.thumbnails = thumbnails; 
+    productController.addProduct(req, res, next);
+});
 productRouter.put("/:pid", productController.updateProduct);
 productRouter.delete("/:pid", productController.deleteProductById);
 

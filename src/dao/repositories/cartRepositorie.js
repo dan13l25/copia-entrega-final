@@ -1,29 +1,28 @@
 import cartsModel from "../models/cart.js";
 import Product from "../models/product.js";
-import { devLogger as logger } from "../../utils/loggers.js";
 
 const cartRepositorie = {
-    async getCartById(cartId) {
+    async getCartById(req, cartId) {
         try {
             return await cartsModel.findById(cartId).lean();
         } catch (error) {
-            logger.error("Error al obtener el carrito:", error.message);
+            req.logger.error("Error al obtener el carrito:", error.message);
             throw error;
         }
     },
 
-    async createCart() {
+    async createCart(req) {
         try {
             const newCart = new cartsModel({ products: [] });
             await newCart.save();
             return newCart;
         } catch (error) {
-            logger.error("Error al crear el carrito:", error.message);
+            req.logger.error("Error al crear el carrito:", error.message);
             throw error;
         }
     },
 
-    async addProduct(cartId, productId) {
+    async addProduct(req, cartId, productId) {
         try {
             let cart = await cartsModel.findById(cartId);
             if (!cart) {
@@ -44,12 +43,12 @@ const cartRepositorie = {
 
             await cart.save();
         } catch (error) {
-            logger.error("Error al añadir producto al carrito:", error.message);
+            req.logger.error("Error al añadir producto al carrito:", error.message);
             throw error;
         }
     },
 
-    async deleteProduct(cartId, productId) {
+    async deleteProduct(req, cartId, productId) {
         try {
             let cart = await cartsModel.findById(cartId);
             if (!cart) {
@@ -64,7 +63,7 @@ const cartRepositorie = {
                 throw new Error("El producto no está en el carrito.");
             }
         } catch (error) {
-            logger.error("Error al eliminar producto del carrito:", error.message);
+            req.logger.error("Error al eliminar producto del carrito:", error.message);
             throw error;
         }
     }

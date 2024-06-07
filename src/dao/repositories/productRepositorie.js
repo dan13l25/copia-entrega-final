@@ -2,7 +2,7 @@ import Product from "../models/product.js";
 import { devLogger as logger } from "../../utils/loggers.js";
 
 const productRepositorie = {
-    addProduct: async (title, description, price, thumbnails, code, stock, status, category, brand) => {
+    addProduct: async (req, title, description, price, thumbnails, code, stock, status, category, brand) => {
         try {
             const product = new Product({
                 title,
@@ -15,25 +15,26 @@ const productRepositorie = {
                 category,
                 brand
             });
-    
+
             await product.save();
         } catch (error) {
-            logger.error("Error al añadir el producto:", error.message);
+            req.logger.error("Error al añadir el producto:", error.message);
             throw error;
         }
     },
 
-    readProducts: async () => {
+    readProducts: async (req) => {
         try {
             const products = await Product.find();
             return products;
         } catch (error) {
-            logger.error("Error al leer los productos:", error.message);
+            req.logger.error("Error al leer los productos:", error.message);
             throw error;
         }
     },
 
-    getProducts: async (category, brand, sort) => { 
+
+    getProducts: async (req,category, brand, sort) => { 
         try {
             let query = {};
             if (category) {
@@ -53,55 +54,69 @@ const productRepositorie = {
 
             return products;
         } catch (error) {
-            logger.error("Error al obtener los productos:", error.message);
+            req.logger.error("Error al obtener los productos:", error.message);
             throw error;
         }
     },
 
-    getProductById: async (id) => {
+    getProductById: async (req,id) => {
         try {
             const product = await Product.findById(id);
             return product; 
         } catch (error) {
-            logger.error("Error al obtener el producto:", error.message);
+            req.logger.error("Error al obtener el producto:", error.message);
             throw error;
         }
     },
 
-    getByBrand: async (brand) => {
+    getByBrand: async (req,brand) => {
         try {
             const products = await Product.find({ brand });
             return products; 
         } catch (error) {
-            logger.error("Error al obtener los productos por marca:", error.message);
+            req.logger.error("Error al obtener los productos por marca:", error.message);
             throw error;
         }
     },
 
-    deleteProductById: async (pid) => {
+    deleteProductById: async (req,pid) => {
         try {
             await Product.findByIdAndDelete({_id:pid});
         } catch (error) {
-            logger.error("Error al eliminar el producto:", error.message);
+            req.logger.error("Error al eliminar el producto:", error.message);
             throw error;
         }
     },
 
-    updateProduct: async (pid, newData) => {
+    updateProduct: async (req,pid, newData) => {
         try {
             const updatedProduct = await Product.findByIdAndUpdate(pid, newData, { new: true });
             return updatedProduct;
         } catch (error) {
-            logger.error("Error al actualizar el producto:", error.message);
+            req.logger.error("Error al actualizar el producto:", error.message);
             throw error;
         }
     },
 
-    paginateProducts: async (options) => {
+    paginateProducts: async (req,options) => {
         try {
             return await Product.paginate({}, options);
         } catch (error) {
-            logger.error("Error al paginar los productos:", error.message);
+            req.logger.error("Error al paginar los productos:", error.message);
+            throw error;
+        }
+    },
+
+    updateProductImage: async (req, pid, thumbnail) => {
+        try {
+            const updatedProduct = await Product.findByIdAndUpdate(
+                pid,
+                { $set: { thumbnails: [thumbnail] } }, 
+                { new: true }
+            );
+            return updatedProduct;
+        } catch (error) {
+            req.logger.error("Error al actualizar la imagen del producto:", error.message);
             throw error;
         }
     }

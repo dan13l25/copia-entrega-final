@@ -3,6 +3,7 @@ import { dirname } from 'path';
 import bcrypt from 'bcrypt';
 import dotenv from "dotenv";
 import path from 'path';
+import multer from "multer"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -24,5 +25,28 @@ export const isValidPassword = (user, password) => {
     console.log(`Datos a validar: user-password: ${user.password}, password: ${password}`);
     return bcrypt.compareSync(password, user.password);
 };
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/img/'); 
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname)); 
+    }
+});
+
+// Filtro de archivos
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+    } else {
+        cb(new Error('Not an image! Please upload only images.'), false);
+    }
+};
+
+export const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter
+});
 
 export default __dirname;

@@ -1,7 +1,6 @@
 import cartService from "../dao/services/cartService.js";
 import { errorTypes } from "../utils/errorTypes.js";
-import { CustomError } from "../utils/customError.js"; 
-import { devLogger as logger } from "../utils/loggers.js";
+import { CustomError } from "../utils/customError.js";
 
 export default class CartController {
     constructor() {
@@ -11,7 +10,7 @@ export default class CartController {
     async getCartById(req, res, next) {
         const { cartId } = req.params;
         try {
-            const cart = await cartService.getCartById(cartId);
+            const cart = await cartService.getCartById(req, cartId);
             if (cart) {
                 res.json(cart);
             } else {
@@ -23,7 +22,7 @@ export default class CartController {
                 }));
             }
         } catch (error) {
-            logger.error("Error al obtener el carrito:", error.message);
+            req.logger.error("Error al obtener el carrito:", error.message);
             next(CustomError.createError({
                 name: "GetCartError",
                 message: "Error al obtener el carrito",
@@ -35,10 +34,10 @@ export default class CartController {
 
     async createCart(req, res, next) {
         try {
-            const newCart = await cartService.createCart();
+            const newCart = await cartService.createCart(req);
             res.status(201).json(newCart);
         } catch (error) {
-            logger.error("Error al crear el carrito:", error.message);
+            req.logger.error("Error al crear el carrito:", error.message);
             next(CustomError.createError({
                 name: "CreateCartError",
                 message: "Error al crear el carrito",
@@ -51,10 +50,10 @@ export default class CartController {
     async addProduct(req, res, next) {
         const { cartId, productId } = req.params;
         try {
-            await cartService.addProduct(cartId, productId);
+            await cartService.addProduct(req, cartId, productId);
             res.send("Producto añadido al carrito correctamente");
         } catch (error) {
-            logger.error("Error al añadir producto al carrito:", error.message);
+            req.logger.error("Error al añadir producto al carrito:", error.message);
             next(CustomError.createError({
                 name: "AddProductError",
                 message: "Error al añadir producto al carrito",
@@ -67,10 +66,10 @@ export default class CartController {
     async deleteProduct(req, res, next) {
         const { cartId, productId } = req.params;
         try {
-            await cartService.deleteProduct(cartId, productId);
+            await cartService.deleteProduct(req, cartId, productId);
             res.send("Producto eliminado del carrito correctamente");
         } catch (error) {
-            logger.error("Error al eliminar producto del carrito:", error.message);
+            req.logger.error("Error al eliminar producto del carrito:", error.message);
             next(CustomError.createError({
                 name: "DeleteProductError",
                 message: "Error al eliminar producto del carrito",
@@ -84,10 +83,10 @@ export default class CartController {
         const { cartId } = req.params;
         const cartData = req.body;
         try {
-            const ticket = await cartService.buyCart(cartId, cartData);
+            const ticket = await cartService.buyCart(req, cartId, cartData);
             res.json(ticket);
         } catch (error) {
-            logger.error("Error al realizar la compra:", error.message);
+            req.logger.error("Error al realizar la compra:", error.message);
             next(CustomError.createError({
                 name: "BuyCartError",
                 message: "Error al realizar la compra",
@@ -105,11 +104,11 @@ export default class CartController {
         const jwtToken = req.session.token;
 
         try {
-            const cart = await cartService.getCartById(cartId, userId);
-            const purchaseCartView = await cartService.getPurchaseCart();
+            const cart = await cartService.getCartById(req, cartId, userId);
+            const purchaseCartView = await cartService.getPurchaseCart(req);
             res.render(purchaseCartView, { user, isAuthenticated, jwtToken, cart });
         } catch (error) {
-            logger.error("Error al obtener el carrito de compra:", error.message);
+            req.logger.error("Error al obtener el carrito de compra:", error.message);
             next(CustomError.createError({
                 name: "GetBuyCartError",
                 message: "Error al obtener el carrito de compra",

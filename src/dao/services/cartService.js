@@ -1,22 +1,21 @@
 import cartRepositorie from "../repositories/cartRepositorie.js";
-import productRepositorie from "../repositories/productRepositorie.js"; 
+import productRepositorie from "../repositories/productRepositorie.js";
 import { generateRandomCode } from "../../middlewares/auth.js";
 import CartDTO from "../DTO/CartDTO.js";
 import ticketRepositorie from "../repositories/ticketRepositorie.js";
 import TicketDTO from "../DTO/TicketDTO.js";
-import { devLogger as logger } from "../../utils/loggers.js";
 
 const cartService = {
-    async getCartById(cartId) {
-        return await cartRepositorie.getCartById(cartId);
+    async getCartById(req, cartId) {
+        return await cartRepositorie.getCartById(req, cartId);
     },
 
-    async createCart() {
-        return await cartRepositorie.createCart();
+    async createCart(req) {
+        return await cartRepositorie.createCart(req);
     },
 
-    async addProduct(cartId, productId) {
-        const product = await productRepositorie.getProductById(productId); 
+    async addProduct(req, cartId, productId) {
+        const product = await productRepositorie.getProductById(req, productId);
         if (!product) {
             throw new Error(`Producto con ID ${productId} no encontrado`);
         }
@@ -25,26 +24,26 @@ const cartService = {
             throw new Error("Producto fuera de stock");
         }
 
-        const updatedCart = await cartRepositorie.addProduct(cartId, productId);
+        const updatedCart = await cartRepositorie.addProduct(req, cartId, productId);
         return updatedCart;
     },
 
-    async deleteProduct(cartId, productId) {
-        return await cartRepositorie.deleteProduct(cartId, productId);
+    async deleteProduct(req, cartId, productId) {
+        return await cartRepositorie.deleteProduct(req, cartId, productId);
     },
 
-    async buyCart(cartId, cartData) {
+    async buyCart(req, cartId, cartData) {
         const { userId, quantity } = cartData;
 
         try {
-            const cart = await this.getCartById(cartId);
+            const cart = await this.getCartById(req, cartId);
 
             let totalPurchaseAmount = 0;
             const productsToPurchase = [];
             const productsToKeepInCart = [];
 
             for (const item of cart.products) {
-                const product = await productRepositorie.getProductById(item.product);
+                const product = await productRepositorie.getProductById(req, item.product);
 
                 if (!product) {
                     throw new Error(`Producto con ID ${item.product} no encontrado`);
@@ -79,19 +78,19 @@ const cartService = {
                 })),
             });
 
-            const ticket = await ticketRepositorie.createTicket(ticketDTO);
+            const ticket = await ticketRepositorie.createTicket(req, ticketDTO);
 
             cart.products = productsToKeepInCart;
             await cart.save();
 
             return ticket;
         } catch (error) {
-            logger.error("Error al realizar la compra:", error.message);
+            req.logger.error("Error al realizar la compra:", error.message);
             throw new Error("Error al realizar la compra: " + error.message);
         }
     },
 
-    async getPurchaseCart() {
+    async getPurchaseCart(req) {
         return "purchase";
     }
 };
