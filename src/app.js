@@ -16,7 +16,7 @@ const server = app.listen(port, () => console.log("Servidor operando en puerto",
 connectMongoDB();
 
 // Configuración de Winston
-app.use(addLogger);
+app.use(addLogger)
 
 // Configuración de middlewares
 middlewareConfig(app);
@@ -59,22 +59,22 @@ app.use(errorHandler);
 
 // Configuración de socket.io
 const io = new Server(server);
-const msg = [];
+const messages = []; 
 
 io.on("connection", (socket) => {
-  console.log("Nuevo usuario conectado:", socket.id);
 
-  socket.on("message", async (data) => {
+  console.log("Nuevo usuario conectado:", socket.id);
+  socket.emit("messageLogs", messages);
+  socket.on("message", (data) => {
     try {
-      const newMessage = new messagesModel(data);
-      await newMessage.save();
-      io.emit("messageLogs", await messagesModel.find());
+      messages.push(data); 
+      io.emit("messageLogs", messages); 
     } catch (error) {
       console.error("Error al guardar el mensaje:", error);
     }
   });
 
-  socket.on("producto", async (producto) => {
+  socket.on("producto", async () => {
     try {
       const allProduct = await productService.getProducts();
       console.log(allProduct);
