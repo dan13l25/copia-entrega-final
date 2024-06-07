@@ -66,7 +66,63 @@ const cartRepositorie = {
             req.logger.error("Error al eliminar producto del carrito:", error.message);
             throw error;
         }
-    }
+    },
+
+    deleteProductFromCart: async (cartId, userId, productId) => {
+        try {
+          const cart = await cartsModel.findOneAndUpdate(
+            { _id: cartId, user: userId },
+            { $pull: { products: { product: productId } } },
+            { new: true }
+          );
+          return cart;
+        } catch (error) {
+          throw new Error("Error al eliminar el producto del carrito: " + error.message);
+        }
+      },
+    
+      // Actualizar cantidad de producto en el carrito
+      updateProductQuantityInCart: async (cartId, userId, productId, quantity) => {
+        try {
+          const cart = await cartsModel.findOneAndUpdate(
+            { _id: cartId, user: userId, "products.product": productId },
+            { $set: { "products.$.quantity": quantity } },
+            { new: true }
+          );
+          return cart;
+        } catch (error) {
+          throw new Error("Error al actualizar la cantidad del producto en el carrito: " + error.message);
+        }
+      },
+    
+      // Actualizar el carrito con nuevos productos
+      updateCart: async (cartId, userId, products) => {
+        try {
+          const cart = await cartsModel.findOneAndUpdate(
+            { _id: cartId, user: userId },
+            { products: products },
+            { new: true }
+          );
+          return cart;
+        } catch (error) {
+          throw new Error("Error al actualizar el carrito: " + error.message);
+        }
+      },
+    
+      // Limpiar el carrito completamente
+      clearCart: async (cartId, userId) => {
+        try {
+          const cart = await cartsModel.findOneAndUpdate(
+            { _id: cartId, user: userId },
+            { products: [], total: 0 },
+            { new: true }
+          );
+          return cart;
+        } catch (error) {
+          throw new Error("Error al vaciar el carrito: " + error.message);
+        }
+      }
+
 };
 
 export default cartRepositorie;

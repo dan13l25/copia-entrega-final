@@ -6,8 +6,8 @@ import ticketRepositorie from "../repositories/ticketRepositorie.js";
 import TicketDTO from "../DTO/TicketDTO.js";
 
 const cartService = {
-    async getCartById(req, cartId) {
-        return await cartRepositorie.getCartById(req, cartId);
+    async getCartById(req, cartId, userId) {
+        return await cartRepositorie.getCartById(req, cartId, userId);
     },
 
     async createCart(req) {
@@ -32,11 +32,27 @@ const cartService = {
         return await cartRepositorie.deleteProduct(req, cartId, productId);
     },
 
+    async deleteProductFromCart(cid, userId, pid) {
+        return await cartRepositorie.deleteProductFromCart(cid, userId, pid);
+    },
+    
+    async updateProductQuantityInCart(cid, userId, pid, quantity) {
+        return await cartRepositorie.updateProductQuantityInCart(cid, userId, pid, quantity);
+    },
+
+    async updateCart(cid, userId, products) {
+        return await cartRepositorie.updateCart(cid, userId, products);
+    },
+
+    async clearCart(cid, userId) {
+        return await cartRepositorie.clearCart(cid, userId);
+    },
+
     async buyCart(req, cartId, cartData) {
         const { userId, quantity } = cartData;
 
         try {
-            const cart = await this.getCartById(req, cartId);
+            const cart = await this.getCartById(req, cartId, userId);
 
             let totalPurchaseAmount = 0;
             const productsToPurchase = [];

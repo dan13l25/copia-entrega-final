@@ -117,4 +117,78 @@ export default class CartController {
             }));
         }
     }
+
+    async deleteProductFromCart(req, res, next) {
+        const { cid, pid } = req.params;
+        const userId = req.session.userId;
+
+        try {
+            const cart = await cartService.deleteProductFromCart(cid, userId, pid);
+            return res.json({ message: "Producto eliminado del carrito correctamente", cart });
+        } catch (error) {
+            req.logger.error("Error al eliminar el producto del carrito:", error);
+            next(CustomError.createError({
+                name: "DeleteProductError",
+                message: "Error al eliminar el producto del carrito",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
+    }
+
+    async updateProductQuantityInCart(req, res, next) {
+        const { cid, pid } = req.params;
+        const { quantity } = req.body;
+        const userId = req.session.userId;
+
+        try {
+            const cart = await cartService.updateProductQuantityInCart(cid, userId, pid, quantity);
+            return res.json({ message: "Cantidad del producto en el carrito actualizada correctamente", cart });
+        } catch (error) {
+            req.logger.error("Error al actualizar la cantidad del producto en el carrito:", error);
+            next(CustomError.createError({
+                name: "UpdateProductQuantityError",
+                message: "Error al actualizar la cantidad del producto en el carrito",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
+    }
+
+    async updateCart(req, res, next) {
+        const { cid } = req.params;
+        const { products } = req.body;
+        const userId = req.session.userId;
+
+        try {
+            const cart = await cartService.updateCart(cid, userId, products);
+            return res.json(cart);
+        } catch (error) {
+            req.logger.error("Error al actualizar el carrito:", error);
+            next(CustomError.createError({
+                name: "UpdateCartError",
+                message: "Error al actualizar el carrito",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
+    }
+
+    async clearCart(req, res, next) {
+        const { cid } = req.params;
+        const userId = req.session.userId;
+
+        try {
+            const cart = await cartService.clearCart(cid, userId);
+            return res.json({ message: "Carrito vaciado completamente", cart });
+        } catch (error) {
+            req.logger.error("Error al vaciar el carrito:", error);
+            next(CustomError.createError({
+                name: "ClearCartError",
+                message: "Error al vaciar el carrito",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
+    }
 }
