@@ -153,7 +153,64 @@ const userController = {
                 description: error.message
             }));
         }
+    },
+
+    requestPasswordReset: async (req, res, next) => {
+        const { email } = req.body;
+        try {
+            const message = await userService.requestPasswordReset(email);
+            res.send({ message });
+        } catch (error) {
+            req.logger.error("Error al solicitar restablecimiento de contraseña:", error.message);
+            next(CustomError.createError({
+                name: "RequestPasswordResetError",
+                message: "Error al solicitar restablecimiento de contraseña",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
+    },
+
+    getResetPassword: async (req, res, next) => {
+        const { token } = req.params;
+        try {
+            const user = await userModel.findOne({
+                resetPasswordToken: token,
+                resetPasswordExpires: { $gt: Date.now() }
+            });
+
+            if (!user) {
+                return res.render('expiredToken', { message: "El enlace de restablecimiento ha expirado." });
+            }
+
+            res.render('resetPassword', { token });
+        } catch (error) {
+            logger.error("Error al obtener la vista de restablecimiento de contraseña:", error.message);
+            next(CustomError.createError({
+                name: "GetResetPasswordError",
+                message: "Error al obtener la vista de restablecimiento de contraseña",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
+    },
+
+    resetPassword: async (req, res, next) => {
+        const { token, newPassword } = req.body;
+        try {
+            const message = await userService.resetPassword(token, newPassword);
+            res.send({ message });
+        } catch (error) {
+            logger.error("Error al restablecer la contraseña:", error.message);
+            next(CustomError.createError({
+                name: "ResetPasswordError",
+                message: "Error al restablecer la contraseña",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
     }
+
 };
 
 export default userController;

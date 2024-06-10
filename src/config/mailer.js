@@ -1,6 +1,5 @@
 import nodemailer from "nodemailer"
-import { EMAIL_PASSWORD } from "../utils"
-import { EMAIL_USERNAME } from "../utils"
+import { EMAIL_PASSWORD, EMAIL_USERNAME } from "../utils.js"
 
 export const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -13,6 +12,8 @@ export const transporter = nodemailer.createTransport({
     }
 })
 
-transporter.verify().then(()=>{
-    console.log("mensajes listos")
-})
+transporter.verify().then(() => {
+    console.log("Mensajes listos");
+}).catch(error => {
+    console.error("Error en la configuración del transporte:", error);
+}); 
