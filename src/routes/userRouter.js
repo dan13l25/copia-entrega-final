@@ -21,7 +21,7 @@ userRouter.post("/restore", userController.restore);
 //recuperacion de contraseña por correo 
 userRouter.post('/request-password-reset', userController.requestPasswordReset);
 userRouter.get('/reset-password/:token', userController.getResetPassword);
-userRouter.post('/reset-password', userController.resetPassword);
+userRouter.post('/reset-password', userController.resetPassword);  
 
 userRouter.get(
   "/github",
@@ -41,6 +41,7 @@ userRouter.get(
 );
 
 //metodo passport
+
 /*userRouter.get("/faillogin", async (req, res) => {
     console.log("error");
     res.send({ error: "Fallo" });

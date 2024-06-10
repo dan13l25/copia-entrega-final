@@ -7,6 +7,7 @@ import UserDTO from "../dto/UserDTO.js";
 import { devLogger as logger } from "../../utils/loggers.js";
 import crypto from "crypto"
 import { transporter } from "../../config/mailer.js";
+import userModel from "../models/users.js";
 
 const userService = {
     login: async (email, password) => {
@@ -120,7 +121,7 @@ const userService = {
             user.resetPasswordExpires = expirationDate;
             await user.save();
 
-            const resetLink = `http://localhost:8080/reset-password/${token}`;
+            const resetLink = `http://localhost:8080/api/users/reset-password/${token}`;
 
             const mailOptions = {
                 to: user.email,

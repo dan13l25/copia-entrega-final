@@ -2,6 +2,7 @@ import userService from "../dao/services/userService.js";
 import { errorTypes } from "../utils/errorTypes.js";
 import { CustomError } from "../utils/customError.js";
 import { devLogger as logger } from "../utils/loggers.js";
+import userModel from "../dao/models/users.js";
 
 const userController = {
     getLogin: async (req, res, next) => {
