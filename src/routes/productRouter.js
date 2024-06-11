@@ -7,12 +7,13 @@ import { isAdmin } from "../middlewares/adminAuth.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { auth } from "../middlewares/auth.js";
 import { upload } from "../utils.js";
+import { isPremium } from "../middlewares/adminAuth.js";
 
 const productRouter = express.Router();
 const productController = new ProductController();
 
 //probar middleware
-productRouter.get("/",auth ,async (req, res) => {
+productRouter.get("/", auth, async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 4;
         const page = parseInt(req.query.page) || 1;
@@ -63,12 +64,14 @@ productRouter.get("/mockingproducts", (req, res) => {
 productRouter.get("/view", productController.renderProductsPage);
 productRouter.get("/:pid", productController.getProductById);
 productRouter.get("/brand/:brand", productController.getByBrand);
-productRouter.post('/addProduct', authenticate, isAdmin, upload.array('thumbnails', 5), (req, res, next) => {
+
+productRouter.post('/addProduct', authenticate, isPremium, upload.array('thumbnails', 5), (req, res, next) => {
     const thumbnails = req.files.map(file => file.path); 
     req.body.thumbnails = thumbnails; 
     productController.addProduct(req, res, next);
 });
-productRouter.put("/:pid", productController.updateProduct);
-productRouter.delete("/:pid", productController.deleteProductById);
+
+productRouter.delete("/:pid", authenticate, productController.deleteProductById);
+productRouter.put("/:pid", authenticate, productController.updateProduct);
 
 export { productRouter };

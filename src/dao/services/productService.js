@@ -1,83 +1,74 @@
 import productRepositorie from "../repositories/productRepositorie.js";
 
 const productService = {
-    addProduct: async (req, title, description, price, thumbnails, code, stock, status, category, brand) => {
+    addProduct: async (title, description, price, thumbnails, code, stock, status, category, brand, owner) => {
         try {
-            await productRepositorie.addProduct(req, title, description, price, thumbnails, code, stock, status, category, brand);
+            await productRepositorie.addProduct(title, description, price, thumbnails, code, stock, status, category, brand, owner);
         } catch (error) {
-            req.logger.error("Error al añadir el producto:", error.message);
             throw error;
         }
     },
 
-    readProducts: async (req) => {
+    readProducts: async () => {
         try {
             return await productRepositorie.readProducts();
         } catch (error) {
-            req.logger.error("Error al leer los productos:", error.message);
             throw error;
         }
     },
 
-    getProducts: async (req,category, brand, sort) => {
+    getProducts: async (category, brand, sort) => {
         try {
             return await productRepositorie.getProducts(category, brand, sort);
         } catch (error) {
-            req.logger.error("Error al obtener los productos:", error.message);
             throw error;
         }
     },
 
-    getProductById: async (req,id) => {
+    getProductById: async (id) => {
         try {
             return await productRepositorie.getProductById(id);
         } catch (error) {
-            req.logger.error("Error al obtener el producto:", error.message);
             throw error;
         }
     },
 
-    getByBrand: async (req,brand) => {
+    getByBrand: async (brand) => {
         try {
             return await productRepositorie.getByBrand(brand);
         } catch (error) {
-            req.logger.error("Error al obtener los productos por marca:", error.message);
             throw error;
         }
     },
 
-    deleteProductById: async (req,pid) => {
+    deleteProductById: async (id) => {
         try {
-            await productRepositorie.deleteProductById(pid);
+            await productRepositorie.deleteProductById(id);
         } catch (error) {
-            req.logger.error("Error al eliminar el producto:", error.message);
             throw error;
         }
     },
 
-    updateProduct: async (req,pid, newData) => {
+    updateProduct: async (id, newData) => {
         try {
-            return await productRepositorie.updateProduct(pid, newData);
+            return await productRepositorie.updateProduct(id, newData);
         } catch (error) {
-            req.logger.error("Error al actualizar el producto:", error.message);
             throw error;
         }
     },
 
-    paginateProducts: async (req,options) => {
+    paginateProducts: async (options) => {
         try {
             return await productRepositorie.paginateProducts(options);
         } catch (error) {
-            req.logger.error("Error al paginar los productos:", error.message);
             throw error;
         }
     },
 
-    updateProductImage: async (req,pid, thumbnail) => {
+    updateProductImage: async (id, thumbnail) => {
         try {
-            return await productRepositorie.updateProductImage(pid, thumbnail);
+            return await productRepositorie.updateProductImage(id, thumbnail);
         } catch (error) {
-            req.logger.error("Error al actualizar la imagen del producto:", error.message);
             throw error;
         }
     }

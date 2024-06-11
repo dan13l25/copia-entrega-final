@@ -1,16 +1,19 @@
-import userRepository from "../dao/repositories/userRepositorie.js";
+export const isAdmin = (req, res, next) => {
+    const user = req.session.user; 
 
-export const isAdmin = async (req, res, next) => {
-    const userId = req.userId; 
-
-    try {
-        const user = await userRepository.findById(userId);
-        if (user && user.role === "admin") {
-            next();
-        } else {
-            res.status(403).json({ message: "Acceso denegado: Solo los administradores pueden realizar esta acción." });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "Error al verificar el rol del usuario." });
+    if (user && user.role === "admin") {
+        return next();
     }
+
+    res.status(403).json({ message: "Acceso denegado: Solo los administradores pueden realizar esta acción." });
+};
+
+export const isPremium = (req, res, next) => {
+    const user = req.session.user; 
+
+    if (user && user.role === "premium") {
+        return next();
+    }
+
+    res.status(403).json({ message: "Acceso denegado: Solo los usuarios premium pueden realizar esta acción." });
 };

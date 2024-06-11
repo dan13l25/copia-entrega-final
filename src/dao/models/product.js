@@ -47,6 +47,11 @@ const productSchema = new Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'userModel'
+    },
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'userModel',
+        default: "admin"
     }
 });
 

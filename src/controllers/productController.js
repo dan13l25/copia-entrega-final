@@ -12,6 +12,8 @@ export default class ProductController {
     async addProduct(req, res, next) {
         const { title, description, price, code, stock, status, category, brand } = req.body;
         const thumbnails = req.body.thumbnails; 
+        const userId = req.userId; // Obtener el ID del usuario de la sesión
+        const userRole = req.session.user.role; // Obtener el rol del usuario de la sesión
 
         if (!title || !price) {
             return next(CustomError.createError({
@@ -22,8 +24,13 @@ export default class ProductController {
             }));
         }
 
-        const userId = req.userId;
-        const productData = new ProductDTO(title, brand, description, price, stock, category, thumbnails, userId);
+        // Establecer el owner del producto
+        let owner = "admin";
+        if (userRole === "premium") {
+            owner = req.session.user.email; // Usar el email del usuario premium como owner
+        }
+
+        const productData = new ProductDTO(title, brand, description, price, stock, category, thumbnails, owner);
 
         try {
             await productService.addProduct(
@@ -35,7 +42,8 @@ export default class ProductController {
                 productData.stock,
                 status,
                 productData.category,
-                productData.brand
+                productData.brand,
+                productData.owner
             );
             res.status(succesTypes.SUCCESS_CREATED).json({ message: "Producto añadido correctamente" });
         } catch (error) {
@@ -43,6 +51,46 @@ export default class ProductController {
             next(CustomError.createError({
                 name: "AddProductError",
                 message: "Error al añadir el producto",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
+    }
+
+    async deleteProductById(req, res, next) {
+        const { pid } = req.params;
+        const userRole = req.session.user.role; // Obtener el rol del usuario de la sesión
+        const userEmail = req.session.user.email; // Obtener el email del usuario de la sesión
+
+        try {
+            const product = await productService.getProductById(pid);
+
+            if (!product) {
+                return next(CustomError.createError({
+                    name: "ProductNotFoundError",
+                    message: "Producto no encontrado",
+                    code: errorTypes.ERROR_NOT_FOUND,
+                    description: `Product with id ${pid} not found`
+                }));
+            }
+
+            // Verificar permisos de eliminación
+            if (userRole !== "admin" && product.owner !== userEmail) {
+                return next(CustomError.createError({
+                    name: "UnauthorizedError",
+                    message: "No tienes permiso para eliminar este producto",
+                    code: errorTypes.ERROR_UNAUTHORIZED,
+                    description: `User with email ${userEmail} tried to delete product with id ${pid} owned by ${product.owner}`
+                }));
+            }
+
+            await productService.deleteProductById(pid);
+            res.json({ message: "Producto eliminado correctamente" });
+        } catch (error) {
+            req.logger.error("Error al eliminar el producto:", error.message);
+            next(CustomError.createError({
+                name: "DeleteProductByIdError",
+                message: "Error al eliminar el producto",
                 code: errorTypes.ERROR_INTERNAL_ERROR,
                 description: error.message
             }));
@@ -116,23 +164,6 @@ export default class ProductController {
             next(CustomError.createError({
                 name: "GetByBrandError",
                 message: "Error al obtener los productos por marca",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
-        }
-    }
-
-    async deleteProductById(req, res, next) {
-        const { pid } = req.params;
-
-        try {
-            await productService.deleteProductById(pid);
-            res.json({ message: "Producto eliminado correctamente" });
-        } catch (error) {
-            req.logger.error("Error al eliminar el producto:", error.message);
-            next(CustomError.createError({
-                name: "DeleteProductByIdError",
-                message: "Error al eliminar el producto",
                 code: errorTypes.ERROR_INTERNAL_ERROR,
                 description: error.message
             }));

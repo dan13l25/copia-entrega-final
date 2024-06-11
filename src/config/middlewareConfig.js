@@ -12,7 +12,13 @@ import initializePassport from "./passportConfig.js";
 export const middlewareConfig = (app) => {
     app.use(express.urlencoded({ extended: true }));
     app.use(express.json());
-    app.engine("handlebars", handlebars.engine({ Handlebars }));
+    app.engine("handlebars", handlebars.engine({
+      Handlebars,
+      runtimeOptions: {
+          allowProtoPropertiesByDefault: true,
+          allowProtoMethodsByDefault: true,
+      },
+  }));
     app.set("view engine", "handlebars");
     app.set("views", __dirname + "/views");
     app.use(express.static(__dirname + "/public"));

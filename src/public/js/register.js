@@ -1,5 +1,5 @@
-const form = document.getElementById("loginForm");
-const errorMessage = document.getElementById("errorMessage"); // Definir el elemento errorMessage
+const form = document.getElementById("registerForm");
+const errorMessage = document.getElementById("errorMessage"); 
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -7,7 +7,7 @@ form.addEventListener("submit", (e) => {
   const obj = {};
   data.forEach((value, key) => (obj[key] = value));
   
-  fetch("/api/users/login", {
+  fetch("/api/users/register", {
     method: "POST",
     body: JSON.stringify(obj),
     headers: {
@@ -20,17 +20,17 @@ form.addEventListener("submit", (e) => {
     } else {
         errorMessage.textContent = 'Este email ya es un usuario. Logueate'; 
         errorMessage.style.display = 'block';
-        throw new Error('Credenciales incorrectas');
+        throw new Error('Error al registrarse');
     }
   })
   .then(data => {
     const token = data.access_token; 
     localStorage.setItem('token', token); 
     console.log("Token:", token);
-    console.log("Inicio de sesión exitoso!");
+    console.log("Registro exitoso!");
     window.location.href = "http://localhost:8080/api/products/"; 
   })
   .catch(error => {
-    console.error('Error en el inicio de sesión:', error);
+    console.error('Error en el registro:', error);
   });
 });
