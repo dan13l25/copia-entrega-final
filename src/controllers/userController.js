@@ -10,7 +10,7 @@ const userController = {
             const loginView = await userService.getLogin();
             res.render(loginView);
         } catch (error) {
-            logger.error("Error al obtener la vista de inicio de sesión:", error.message);
+            req.logger.error("Error al obtener la vista de inicio de sesión:", error.message);
             next(CustomError.createError({
                 name: "GetLoginError",
                 message: "Error al obtener la vista de inicio de sesión",
@@ -31,7 +31,7 @@ const userController = {
             res.cookie("jwtToken", access_token, { httpOnly: true })
                .send({ status: "Success", message: user, access_token, userId: user._id });
         } catch (error) {
-            logger.error("Error al iniciar sesión:", error.message);
+            req.logger.error("Error al iniciar sesión:", error.message);
             next(CustomError.createError({
                 name: "LoginError",
                 message: "Error al iniciar sesión",
@@ -46,7 +46,7 @@ const userController = {
             const registerView = await userService.getRegister();
             res.render(registerView);
         } catch (error) {
-            logger.error("Error al obtener la vista de registro:", error.message);
+            req.ogger.error("Error al obtener la vista de registro:", error.message);
             next(CustomError.createError({
                 name: "GetRegisterError",
                 message: "Error al obtener la vista de registro",
@@ -67,7 +67,7 @@ const userController = {
             res.cookie("jwtToken", access_token, { httpOnly: true })
                .send({ status: "Success", message: newUser, access_token, userId: newUser._id });
         } catch (error) {
-            logger.error("Error al obtener la vista de registro:", error.message);
+            req.logger.error("Error al obtener la vista de registro:", error.message);
             next(CustomError.createError({
                 name: "RegisterError",
                 message: "Error al registrar usuario",
@@ -82,7 +82,7 @@ const userController = {
             const githubAuth = await userService.getGitHub();
             res.redirect(githubAuth);
         } catch (error) {
-            logger.error("Error al obtener la autenticación de GitHub:", error.message);
+            req.logger.error("Error al obtener la autenticación de GitHub:", error.message);
             next(CustomError.createError({
                 name: "GitHubAuthError",
                 message: "Error al obtener la autenticación de GitHub",
@@ -96,7 +96,7 @@ const userController = {
         try {
             await userService.gitHubCallback(req, res, next);
         } catch (error) {
-            logger.error("Error en el callback de GitHub:", error.message);
+            req.logger.error("Error en el callback de GitHub:", error.message);
             next(CustomError.createError({
                 name: "GitHubCallbackError",
                 message: "Error en el callback de GitHub",
@@ -116,7 +116,7 @@ const userController = {
             res.cookie("jwtToken", access_token, { httpOnly: true })
                .send({ status: "Success", message: user, access_token, userId: user._id });
         } catch (error) {
-            logger.error("Error en el callback de GitHub:", error.message);
+            req.logger.error("Error en el callback de GitHub:", error.message);
             next(CustomError.createError({
                 name: "GitHubHandleCallbackError",
                 message: "Error en el callback de GitHub",
@@ -130,7 +130,7 @@ const userController = {
         try {
             await userService.logOut(req, res);
         } catch (error) {
-            logger.error("Error al cerrar sesión:", error.message);
+            req.logger.error("Error al cerrar sesión:", error.message);
             next(CustomError.createError({
                 name: "LogOutError",
                 message: "Error al cerrar sesión",
@@ -146,7 +146,7 @@ const userController = {
             const message = await userService.restorePassword(email, password);
             res.send({ message });
         } catch (error) {
-            logger.error("Error al restaurar la contraseña:", error.message);
+            req.logger.error("Error al restaurar la contraseña:", error.message);
             next(CustomError.createError({
                 name: "RestorePasswordError",
                 message: "Error al restaurar la contraseña",
@@ -186,7 +186,7 @@ const userController = {
 
             res.render('resetPassword', { token });
         } catch (error) {
-            logger.error("Error al obtener la vista de restablecimiento de contraseña:", error.message);
+            req.logger.error("Error al obtener la vista de restablecimiento de contraseña:", error.message);
             next(CustomError.createError({
                 name: "GetResetPasswordError",
                 message: "Error al obtener la vista de restablecimiento de contraseña",
@@ -202,7 +202,7 @@ const userController = {
             const message = await userService.resetPassword(token, newPassword);
             res.send({ message });
         } catch (error) {
-            logger.error("Error al restablecer la contraseña:", error.message);
+            req.logger.error("Error al restablecer la contraseña:", error.message);
             next(CustomError.createError({
                 name: "ResetPasswordError",
                 message: "Error al restablecer la contraseña",

@@ -24,10 +24,20 @@ form.addEventListener("submit", (e) => {
     }
   })
   .then(data => {
-    const token = data.access_token; 
-    localStorage.setItem('token', token); 
+    
+    const token = data.access_token;
+    const userId = data.userId;
+    const userRole = data.userRole;
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('userId', userId);
+    localStorage.setItem('userRole', userRole)
+
     console.log("Token:", token);
     console.log("Registro exitoso!");
+    console.log("User Id:", userId);
+    console.log("user rol:", userRole)
+
     window.location.href = "http://localhost:8080/api/products/"; 
   })
   .catch(error => {

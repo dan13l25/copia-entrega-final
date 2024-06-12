@@ -81,7 +81,6 @@ const cartRepositorie = {
         }
       },
     
-      // Actualizar cantidad de producto en el carrito
       updateProductQuantityInCart: async (cartId, userId, productId, quantity) => {
         try {
           const cart = await cartsModel.findOneAndUpdate(
@@ -95,7 +94,6 @@ const cartRepositorie = {
         }
       },
     
-      // Actualizar el carrito con nuevos productos
       updateCart: async (cartId, userId, products) => {
         try {
           const cart = await cartsModel.findOneAndUpdate(
@@ -109,7 +107,6 @@ const cartRepositorie = {
         }
       },
     
-      // Limpiar el carrito completamente
       clearCart: async (cartId, userId) => {
         try {
           const cart = await cartsModel.findOneAndUpdate(

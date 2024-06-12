@@ -12,8 +12,8 @@ export default class ProductController {
     async addProduct(req, res, next) {
         const { title, description, price, code, stock, status, category, brand } = req.body;
         const thumbnails = req.body.thumbnails; 
-        const userId = req.userId; // Obtener el ID del usuario de la sesión
-        const userRole = req.session.user.role; // Obtener el rol del usuario de la sesión
+        const userId = req.userId; 
+        const userRole = req.session.user.role; 
 
         if (!title || !price) {
             return next(CustomError.createError({
@@ -24,10 +24,9 @@ export default class ProductController {
             }));
         }
 
-        // Establecer el owner del producto
         let owner = "admin";
         if (userRole === "premium") {
-            owner = req.session.user.email; // Usar el email del usuario premium como owner
+            owner = req.session.user.email; 
         }
 
         const productData = new ProductDTO(title, brand, description, price, stock, category, thumbnails, owner);
@@ -59,8 +58,8 @@ export default class ProductController {
 
     async deleteProductById(req, res, next) {
         const { pid } = req.params;
-        const userRole = req.session.user.role; // Obtener el rol del usuario de la sesión
-        const userEmail = req.session.user.email; // Obtener el email del usuario de la sesión
+        const userRole = req.session.user.role; 
+        const userEmail = req.session.user.email; 
 
         try {
             const product = await productService.getProductById(pid);
@@ -74,7 +73,6 @@ export default class ProductController {
                 }));
             }
 
-            // Verificar permisos de eliminación
             if (userRole !== "admin" && product.owner !== userEmail) {
                 return next(CustomError.createError({
                     name: "UnauthorizedError",
