@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "abbrev": "^2.0.0",
     "bcrypt": "^5.1.1",
     "bcrypt-nodejs": "^0.0.3",
     "body-parser": "^1.20.2",
@@ -41,6 +42,8 @@
     "session-file-store": "^1.5.0",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "twilio": "^5.0.4",
     "winston": "^3.13.0"
   },
