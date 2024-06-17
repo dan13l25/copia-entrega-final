@@ -1,0 +1,11 @@
+paths:
+  /api/products:
+    get:
+      descripcion: Lista de los productos disponibles
+      tags: 
+        - Products
+      responses:
+        "200": 
+          descripcion:  Mostrar productos 
+        "500":
+          descripcion: Error al obtener producto

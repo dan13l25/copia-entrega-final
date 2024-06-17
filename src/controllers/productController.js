@@ -4,9 +4,101 @@ import { errorTypes } from "../utils/errorTypes.js";
 import { succesTypes } from "../utils/errorTypes.js";
 import { CustomError } from "../utils/customError.js";
 
-export default class ProductController {
+class ProductController {
     constructor() {
-        console.log("productcontroller funciona");
+        console.log("productController funciona");
+    }
+
+    async getProducts(req, res, next) {
+        try {
+            const limit = parseInt(req.query.limit) || 4;
+            const page = parseInt(req.query.page) || 1;
+            const options = { limit, page, lean: true };
+            const products = await productService.paginateProducts(options);
+            const totalPages = Math.ceil(products.total / limit);
+            const isValid = page >= 1 && page <= totalPages;
+            products.isValid = isValid;
+            res.json(products);
+        } catch (error) {
+            console.error(error);
+            res.status(errorTypes.ERROR_INTERNAL_ERROR).send("Error al recibir productos");
+        }
+    }
+
+    async updateProductImage(req, res, next) {
+        const { pid } = req.params;
+        const thumbnail = req.file ? req.file.path : null;
+        if (!thumbnail) {
+            return res.status(400).json({ message: "Image file is required" });
+        }
+        req.body.thumbnail = thumbnail;
+        try {
+            const updatedProduct = await productService.updateProductImage(pid, thumbnail);
+            res.json({ message: "Producto actualizado correctamente", product: updatedProduct });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async renderProductsPage(req, res, next) {
+        try {
+            const limit = parseInt(req.query.limit) || 4;
+            const page = parseInt(req.query.page) || 1;
+            const options = { limit, page, lean: true };
+            const result = await productService.paginateProducts(options);
+            const products = result.docs;
+            const totalPages = result.totalPages;
+            const currentPage = result.page;
+            res.render("product", { products, totalPages, currentPage });
+        } catch (error) {
+            req.logger.error("Error al renderizar la página de productos paginados:", error.message);
+            next(CustomError.createError({
+                name: "RenderProductsPageError",
+                message: "Error al renderizar la página de productos paginados",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
+    }
+
+    async getProductById(req, res, next) {
+        const { pid } = req.params;
+        try {
+            const product = await productService.getProductById(pid);
+            if (!product) {
+                return next(CustomError.createError({
+                    name: "ProductNotFoundError",
+                    message: "Producto no encontrado",
+                    code: errorTypes.ERROR_NOT_FOUND,
+                    description: `Product with id ${pid} not found`
+                }));
+            }
+            res.json(product);
+        } catch (error) {
+            req.logger.error("Error al obtener el producto:", error.message);
+            next(CustomError.createError({
+                name: "GetProductByIdError",
+                message: "Error al obtener el producto",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
+    }
+
+    async getByBrand(req, res, next) {
+        const { brand } = req.params;
+        try {
+            const products = await productService.getByBrand(brand);
+            res.json(products);
+        } catch (error) {
+            req.logger.error("Error al obtener los productos por marca:", error.message);
+            next(CustomError.createError({
+                name: "GetByBrandError",
+                message: "Error al obtener los productos por marca",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
     }
 
     async addProduct(req, res, next) {
@@ -95,79 +187,6 @@ export default class ProductController {
         }
     }
 
-    async readProducts(req, res, next) {
-        try {
-            const products = await productService.readProducts();
-            res.json(products);
-        } catch (error) {
-            req.logger.error("Error al leer los productos:", error.message);
-            next(CustomError.createError({
-                name: "ReadProductsError",
-                message: "Error al leer los productos",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
-        }
-    }
-
-    async getProducts(req, res, next) {
-        const { category, brand, sort } = req.query;
-
-        try {
-            const products = await productService.getProducts(category, brand, sort);
-            res.json(products);
-        } catch (error) {
-            req.logger.error("Error al obtener los productos:", error.message);
-            next(CustomError.createError({
-                name: "GetProductsError",
-                message: "Error al obtener los productos",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
-        }
-    }
-
-    async getProductById(req, res, next) {
-        const { pid } = req.params;
-        try {
-            const product = await productService.getProductById(pid);
-            if (!product) {
-                return next(CustomError.createError({
-                    name: "ProductNotFoundError",
-                    message: "Producto no encontrado",
-                    code: errorTypes.ERROR_NOT_FOUND,
-                    description: `Product with id ${pid} not found`
-                }));
-            }
-            res.json(product);
-        } catch (error) {
-            req.logger.error("Error al obtener el producto:", error.message);
-            next(CustomError.createError({
-                name: "GetProductByIdError",
-                message: "Error al obtener el producto",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
-        }
-    }
-
-    async getByBrand(req, res, next) {
-        const { brand } = req.params;
-
-        try {
-            const products = await productService.getByBrand(brand);
-            res.json(products);
-        } catch (error) {
-            req.logger.error("Error al obtener los productos por marca:", error.message);
-            next(CustomError.createError({
-                name: "GetByBrandError",
-                message: "Error al obtener los productos por marca",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
-        }
-    }
-
     async updateProduct(req, res, next) {
         const { pid } = req.params;
         const newData = req.body;
@@ -185,50 +204,6 @@ export default class ProductController {
             }));
         }
     }
-
-    async renderProductsPage(req, res, next) {
-        try {
-            const limit = parseInt(req.query.limit) || 4;
-            const page = parseInt(req.query.page) || 1;
-
-            const options = {
-                limit,
-                page,
-                lean: true
-            };
-
-            const result = await productService.paginateProducts(options);
-            const products = result.docs;
-            const totalPages = result.totalPages;
-            const currentPage = result.page;
-
-            res.render("product", { products, totalPages, currentPage });
-        } catch (error) {
-            req.logger.error("Error al renderizar la página de productos paginados:", error.message);
-            next(CustomError.createError({
-                name: "RenderProductsPageError",
-                message: "Error al renderizar la página de productos paginados",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
-        }
-    }
-
-    async updateProductImage(req, res, next) {
-        const { pid } = req.params;
-        const thumbnail = req.body.thumbnail;
-
-        try {
-            const updatedProduct = await productService.updateProductImage(pid, thumbnail);
-            res.json({ message: "Producto actualizado correctamente", product: updatedProduct });
-        } catch (error) {
-            req.logger.error("Error al actualizar la imagen del producto:", error.message);
-            next(CustomError.createError({
-                name: "UpdateProductImageError",
-                message: "Error al actualizar la imagen del producto",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
-        }
-    }
 }
+
+export default new ProductController();
