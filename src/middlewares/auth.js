@@ -1,10 +1,14 @@
-
 export function auth(req, res, next) {
+  if (process.env.NODE_ENV === 'development' && req.path.startsWith('/apidocs')) {
+    return next();
+  }
+
   if (!req.session || !req.session.user) {
     return res.redirect("/login");
   }
   next();
 }
+
 
 export function generateRandomCode(length) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

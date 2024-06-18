@@ -44,17 +44,31 @@ export const middlewareConfig = (app) => {
   };
 
   export const configureSwagger = (app) => {
-    const swaggerOptions = {
-        definition: {
-            openapi: "3.0.1",
-            info: {
-                title: "Documentacion del proyecto",
-                description: "API del proyecto"
-            }
-        },
-        apis: [`${__dirname}/docs/**/*.yaml`]
-    };
+  const swaggerOptions = {
+    definition: {
+      openapi: "3.0.1",
+      info: {
+        title: "Documentacion del proyecto",
+        description: "API del proyecto"
+      },
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            bearerFormat: "JWT"
+          }
+        }
+      },
+      security: [
+        {
+          bearerAuth: []
+        }
+      ]
+    },
+    apis: [`${__dirname}/docs/**/*.yaml`]
+  };
 
-    const specs = swaggerJSDoc(swaggerOptions);
-    app.use("/apidocs", swaggerUiExpress.serve, swaggerUiExpress.setup(specs));
+  const specs = swaggerJSDoc(swaggerOptions);
+  app.use("/apidocs", swaggerUiExpress.serve, swaggerUiExpress.setup(specs));
 };

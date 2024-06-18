@@ -1,11 +1,228 @@
+openapi: 3.0.1
+info:
+  title: Documentacion del proyecto
+  description: API de los productos
+  version: "1.0.0"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "60d21b4667d0d8992e610c85"
+        title:
+          type: string
+          example: "Producto de ejemplo"
+        description:
+          type: string
+          example: "Descripción del producto de ejemplo"
+        price:
+          type: number
+          example: 100
+        thumbnails:
+          type: array
+          items:
+            type: string
+            example: "http://example.com/image.jpg"
+        code:
+          type: string
+          example: "P123456"
+        stock:
+          type: number
+          example: 10
+        status:
+          type: boolean
+          example: true
+        category:
+          type: string
+          example: "Categoría de ejemplo"
+        brand:
+          type: string
+          example: "Marca de ejemplo"
 paths:
   /api/products:
     get:
-      descripcion: Lista de los productos disponibles
-      tags: 
-        - Products
+      summary: Obtener productos
+      security:
+        - bearerAuth: []
       responses:
-        "200": 
-          descripcion:  Mostrar productos 
+        "200":
+          description: Lista de productos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
         "500":
-          descripcion: Error al obtener producto
+          description: Error interno del servidor
+  /api/products/view:
+    get:
+      summary: Renderizar página de productos
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Página de productos renderizada
+        "500":
+          description: Error interno del servidor
+  /api/products/{pid}:
+    get:
+      summary: Obtener producto por ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto
+      responses:
+        "200":
+          description: Producto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        "404":
+          description: Producto no encontrado
+        "500":
+          description: Error interno del servidor
+    put:
+      summary: Actualizar producto por ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        "200":
+          description: Producto actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        "500":
+          description: Error interno del servidor
+    delete:
+      summary: Eliminar producto por ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto
+      responses:
+        "200":
+          description: Producto eliminado
+        "500":
+          description: Error interno del servidor
+  /api/products/updateProductImage/{pid}:
+    put:
+      summary: Actualizar imagen del producto por ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                thumbnail:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Imagen del producto actualizada
+        "400":
+          description: Archivo de imagen requerido
+        "500":
+          description: Error interno del servidor
+  /api/products/brand/{brand}:
+    get:
+      summary: Obtener productos por marca
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: brand
+          required: true
+          schema:
+            type: string
+          description: Marca de los productos
+      responses:
+        "200":
+          description: Productos encontrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        "500":
+          description: Error interno del servidor
+  /api/products/addProduct:
+    post:
+      summary: Añadir un nuevo producto
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                code:
+                  type: string
+                stock:
+                  type: number
+                status:
+                  type: boolean
+                category:
+                  type: string
+                brand:
+                  type: string
+                thumbnails:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        "201":
+          description: Producto añadido correctamente
+        "400":
+          description: Campos requeridos faltantes
+        "500":
+          description: Error interno del servidor
