@@ -1,0 +1,230 @@
+openapi: 3.0.1
+info:
+  title: Documentación del Proyecto
+  description: API de manejo de usuarios
+  version: "1.0.0"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "60d21b4667d0d8992e610c85"
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        age:
+          type: number
+          example: 30
+        email:
+          type: string
+          example: "john.doe@example.com"
+        password:
+          type: string
+          example: "password123"
+        role:
+          type: string
+          example: "user"
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          example: "john.doe@example.com"
+        password:
+          type: string
+          example: "password123"
+    RegisterRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        age:
+          type: number
+          example: 30
+        email:
+          type: string
+          example: "john.doe@example.com"
+        password:
+          type: string
+          example: "password123"
+    PasswordResetRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          example: "john.doe@example.com"
+    PasswordReset:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "123456"
+        newPassword:
+          type: string
+          example: "newpassword123"
+paths:
+  /api/users/login:
+    get:
+      summary: Obtener la vista de inicio de sesión
+      responses:
+        "200":
+          description: Vista de inicio de sesión obtenida correctamente
+        "500":
+          description: Error interno del servidor
+    post:
+      summary: Iniciar sesión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: Inicio de sesión exitoso
+        "500":
+          description: Error interno del servidor
+  /api/users/current:
+    get:
+      summary: Obtener el usuario actual
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Usuario actual obtenido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "500":
+          description: Error interno del servidor
+  /api/users/register:
+    get:
+      summary: Obtener la vista de registro
+      responses:
+        "200":
+          description: Vista de registro obtenida correctamente
+        "500":
+          description: Error interno del servidor
+    post:
+      summary: Registrar un nuevo usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        "200":
+          description: Usuario registrado exitosamente
+        "500":
+          description: Error interno del servidor
+  /api/users/logout:
+    get:
+      summary: Cerrar sesión
+      responses:
+        "200":
+          description: Sesión cerrada correctamente
+        "500":
+          description: Error interno del servidor
+    post:
+      summary: Cerrar sesión
+      responses:
+        "200":
+          description: Sesión cerrada correctamente
+        "500":
+          description: Error interno del servidor
+  /api/users/restore:
+    get:
+      summary: Obtener la vista de restablecimiento de contraseña
+      responses:
+        "200":
+          description: Vista de restablecimiento de contraseña obtenida correctamente
+        "500":
+          description: Error interno del servidor
+    post:
+      summary: Restaurar contraseña
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        "200":
+          description: Contraseña restaurada correctamente
+        "500":
+          description: Error interno del servidor
+  /api/users/request-password-reset:
+    post:
+      summary: Solicitar restablecimiento de contraseña
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        "200":
+          description: Solicitud de restablecimiento de contraseña enviada correctamente
+        "500":
+          description: Error interno del servidor
+  /api/users/reset-password/{token}:
+    get:
+      summary: Obtener la vista de restablecimiento de contraseña mediante token
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+          description: Token de restablecimiento de contraseña
+      responses:
+        "200":
+          description: Vista de restablecimiento de contraseña obtenida correctamente
+        "500":
+          description: Error interno del servidor
+  /api/users/reset-password:
+    post:
+      summary: Restablecer la contraseña
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordReset'
+      responses:
+        "200":
+          description: Contraseña restablecida correctamente
+        "500":
+          description: Error interno del servidor
+  /api/users/github:
+    get:
+      summary: Autenticarse con GitHub
+      responses:
+        "200":
+          description: Redirigir a GitHub para autenticación
+        "500":
+          description: Error interno del servidor
+  /api/users/githubcallback:
+    get:
+      summary: Callback de autenticación de GitHub
+      responses:
+        "200":
+          description: Autenticación de GitHub completada
+        "500":
+          description: Error interno del servidor

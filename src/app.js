@@ -8,7 +8,7 @@ import productService from "./dao/services/productService.js";
 import { middlewareConfig, configureSwagger } from "./config/middlewareConfig.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { addLogger } from "./utils/loggers-env.js";
-
+import cartService from "./dao/services/cartService.js";
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -63,28 +63,48 @@ app.use(errorHandler);
 
 // Configuración de socket.io
 const io = new Server(server);
-const messages = []; 
+const messages = [];
 
 io.on("connection", (socket) => {
+    console.log("Nuevo usuario conectado:", socket.id);
+    socket.emit("messageLogs", messages);
 
-  console.log("Nuevo usuario conectado:", socket.id);
-  socket.emit("messageLogs", messages);
-  socket.on("message", (data) => {
-    try {
-      messages.push(data); 
-      io.emit("messageLogs", messages); 
-    } catch (error) {
-      console.error("Error al guardar el mensaje:", error);
-    }
-  });
+    socket.on("message", (data) => {
+        try {
+            messages.push(data); 
+            io.emit("messageLogs", messages); 
+        } catch (error) {
+            console.error("Error al guardar el mensaje:", error);
+        }
+    });
 
-  socket.on("producto", async () => {
-    try {
-      const allProduct = await productService.getProducts();
-      console.log(allProduct);
-      io.emit("producto", allProduct);
-    } catch (error) {
-      console.error("Error al mostrar productos:", error);
-    }
+    socket.on("producto", async () => {
+        try {
+            const allProduct = await productService.getProducts();
+            console.log(allProduct);
+            io.emit("producto", allProduct);
+        } catch (error) {
+            console.error("Error al mostrar productos:", error);
+        }
+    });
+
+    socket.on("addToCart", async ({ productId }) => {
+      try {
+          console.log("Product ID received:", productId);
+  
+          const product = await productService.getProductById(productId);
+          if (!product) {
+              console.error("Producto no encontrado:", productId);
+              socket.emit('cartUpdated', 'Producto no encontrado.');
+              return;
+          }
+  
+          const userId = socket.handshake.session.user._id; // Asegúrate de que el ID de usuario esté disponible en la sesión
+          await cartService.addToCart(userId, productId);
+          socket.emit('cartUpdated', 'Producto agregado al carrito con éxito.');
+      } catch (error) {
+          console.error("Error al agregar el producto al carrito:", error);
+          socket.emit('cartUpdated', 'Error al agregar el producto al carrito.');
+      }
   });
 });

@@ -5,25 +5,18 @@ const collection = "Carts";
 
 const schema = new Schema({
 
-    quantity: {
-        type: Number,
-        min: 1,
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "userModel",
     },
     products: [
         {
-            product: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Product'
-            },
-            productQuantity: Number,
-            productPrice: Number,
-            productTotal: Number,
+            productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+            quantity: { type: Number, default: 1 }
         }
     ],
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'userModel'
-    }
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
 
 const cartsModel = mongoose.model(collection, schema);

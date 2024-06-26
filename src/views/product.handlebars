@@ -1,28 +1,30 @@
  <h1>Lista de Productos</h1>
-    {{#if products.length}}
-        <ul>
-            {{#each products}}
-                <li>
-                    <h2>{{this.title}}</h2>
-                    <p>{{this.description}}</p>
-                    <p>Precio: ${{this.price}}</p>
-                    <p>Stock: {{this.stock}}</p>
-                    <p>Categoría: {{this.category}}</p>
-                    <p>Marca: {{this.brand}}</p>
-                    <img src="{{this.thumbnails.[0]}}" alt="{{this.title}}">
-                </li>
-            {{/each}}
-        </ul>
-        <div>
-            {{#if (gt currentPage 1)}}
-                <a href="?page={{subtract currentPage 1}}&limit={{../limit}}">Anterior</a>
-            {{/if}}
-            {{#if (lt currentPage totalPages)}}
-                <a href="?page={{add currentPage 1}}&limit={{../limit}}">Siguiente</a>
-            {{/if}}
-        </div>
-    {{else}}
-        <p>No hay productos disponibles.</p>
-    {{/if}}
+{{#if products.length}}
+    <ul>
+        {{#each products}}
+            <li>
+                <h2>{{this.title}}</h2>
+                <p>{{this.description}}</p>
+                <p>Precio: ${{this.price}}</p>
+                <p>Stock: {{this.stock}}</p>
+                <p>Categoría: {{this.category}}</p>
+                <p>Marca: {{this.brand}}</p>
+                <img src="{{this.thumbnails.[0]}}" alt="{{this.title}}">
+                <button class="add-to-cart" data-id="{{this._id}}">Agregar al carrito</button>
+            </li>
+        {{/each}}
+    </ul>
+    <div>
+        {{#if (gt currentPage 1)}}
+            <a href="?page={{subtract currentPage 1}}&limit={{../limit}}">Anterior</a>
+        {{/if}}
+        {{#if (lt currentPage totalPages)}}
+            <a href="?page={{add currentPage 1}}&limit={{../limit}}">Siguiente</a>
+        {{/if}}
+    </div>
+{{else}}
+    <p>No hay productos disponibles.</p>
+{{/if}}
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="/js/products.js"></script>

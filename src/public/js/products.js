@@ -1,5 +1,12 @@
-const socket = io()
+const socket = io();
 
-socket.on("producto",  (products)=>{
-    console.log(products)
-})
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', () => {
+            const productId = button.getAttribute('data-id');
+            socket.emit('addToCart', { productId });
+        });
+    });
+
+    socket.on('cartUpdated', (message) => {
+        alert(message);
+    });
