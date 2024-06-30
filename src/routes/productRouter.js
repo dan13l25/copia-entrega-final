@@ -31,7 +31,7 @@ productRouter.get("/view", productController.renderProductsPage);
 
 productRouter.get("/:pid", productController.getProductById);
 productRouter.get("/brand/:brand", productController.getByBrand);
-productRouter.post('/addProduct', authenticate, isPremium, upload.array('thumbnails', 5), productController.addProduct);
+productRouter.post('/addProduct', authenticate, isAdmin,isPremium, upload.array('thumbnails', 5), productController.addProduct);
 
 productRouter.delete("/:pid", authenticate, productController.deleteProductById);
 

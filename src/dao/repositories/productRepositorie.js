@@ -56,9 +56,13 @@ const productRepositorie = {
     },
 
     getProductById: async (id) => {
-        try {
+         try {
+            console.log(`Buscando producto con ID: ${id}`);
             const product = await Product.findById(id);
-            return product; 
+            if (!product) {
+                console.log(`Producto no encontrado: ${id}`);
+            }
+            return product;
         } catch (error) {
             throw error;
         }

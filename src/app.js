@@ -25,6 +25,7 @@ app.use(addLogger)
 // Configuración de middlewares
 middlewareConfig(app);
 
+
 // Rutas
 app.use("/api/products", productRouter);
 app.use("/api/carts", cartRouter);
@@ -99,7 +100,7 @@ io.on("connection", (socket) => {
               return;
           }
   
-          const userId = socket.handshake.session.user._id; // Asegúrate de que el ID de usuario esté disponible en la sesión
+          const userId = socket.handshake.session.user._id; 
           await cartService.addToCart(userId, productId);
           socket.emit('cartUpdated', 'Producto agregado al carrito con éxito.');
       } catch (error) {
@@ -108,3 +109,5 @@ io.on("connection", (socket) => {
       }
   });
 });
+
+export { app, server, io };
