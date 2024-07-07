@@ -10,7 +10,7 @@ const __dirname = dirname(__filename);
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });  
 
-export const DB_URL = process.env.MONGO_URL;
+export const MONGO_URL = process.env.MONGO_URL;
 export const PRIVATE_KEY = process.env.SECRET_JWT;
 export const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -26,27 +26,21 @@ export const isValidPassword = (user, password) => {
     return bcrypt.compareSync(password, user.password);
 };
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'public/img/'); 
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname)); 
-    }
-});
+export function configureDocumentMulter() {
+    const storage = multer.diskStorage({
+        destination: (req, file, cb) => {
+            const docType = file.fieldname;
+            let folder = 'documents';
+            if (docType === 'profile') folder = 'profiles';
+            if (docType === 'product') folder = 'products';
+            cb(null, path.join(__dirname, 'public', folder));
+        },
+        filename: (req, file, cb) => {
+            cb(null, file.originalname);
+        },
+    });
 
-// Filtro de archivos
-const fileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
-    } else {
-        cb(new Error('No es una imagen'), false);
-    }
-};
-
-export const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter
-});
+    return multer({ storage });
+}    
 
 export default __dirname;

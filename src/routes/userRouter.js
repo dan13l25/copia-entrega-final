@@ -1,13 +1,15 @@
 import express from 'express';
 import userController from '../controllers/userController.js';
 import passport from 'passport';
+import { configureDocumentMulter } from '../utils.js';
 
 const userRouter = express.Router();
+const documentUpload = configureDocumentMulter();
 
 userRouter.get("/login", userController.getLogin);
 userRouter.post("/login", userController.login);
 userRouter.get("/current", passport.authenticate('current', { session: false }), (req, res) => {
-  res.json(req.user);
+    res.json(req.user);
 });
 userRouter.get("/register", userController.getRegister);
 userRouter.post("/register", userController.register); 
@@ -18,27 +20,23 @@ userRouter.get("/restore", (req, res) => {
 });
 userRouter.post("/restore", userController.restore);
 
-//recuperacion de contraseña por correo 
+// Endpoint para subir documentos
+userRouter.post('/:uid/documents', documentUpload.array('documents', 10), userController.uploadDocuments);
+
+// Endpoint para actualizar a premium
+userRouter.post('/premium/:uid', userController.upgradeToPremium);
+
+// Recuperación de contraseña por correo 
 userRouter.post('/request-password-reset', userController.requestPasswordReset);
 userRouter.get('/reset-password/:token', userController.getResetPassword);
 userRouter.post('/reset-password', userController.resetPassword);  
 
-userRouter.get(
-  "/github",
-  passport.authenticate("github", { scope: ["user:email"] }),
-  async (req, res) => {
-  }
-);
-
-userRouter.get(
-  "/githubcallback",
-  passport.authenticate("github", { failureRedirect: "/login" }),
-  async (req, res) => {
+// Autenticación con GitHub
+userRouter.get("/github", passport.authenticate("github", { scope: ["user:email"] }));
+userRouter.get("/githubcallback", passport.authenticate("github", { failureRedirect: "/login" }), async (req, res) => {
     req.session.user = req.user;
-   
-    res.redirect("/chat"); 
-  }
-);
+    res.redirect("/chat");
+});
 
 //metodo passport
 

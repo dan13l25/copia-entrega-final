@@ -27,7 +27,8 @@ const userService = {
             if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
                 user.role = "admin";
             }
-
+            user.last_connection = new Date();
+            await user.save();
             const access_token = generateToken(user);
 
             return { user, access_token };
@@ -165,6 +166,42 @@ const userService = {
             return "Contraseña restablecida con éxito";
         } catch (error) {
             logger.error("Error al restablecer la contraseña:", error.message);
+            throw error;
+        }
+    },
+
+    uploadDocuments: async (req, user, documents) => {
+        try {
+            const updatedUser = await userRepository.uploadDocuments(req, user, documents);
+            return updatedUser;
+        } catch (error) {
+            req.logger.error("Error al actualizar documentos:", error.message);
+            throw error;
+        }
+    },
+
+    upgradeToPremium: async (req, userId) => {
+        try {
+            const user = await userRepository.findById(userId);
+            if (!user) {
+                throw new Error("Usuario no encontrado");
+            }
+
+            const requiredDocuments = ["Identificación", "Comprobante de domicilio", "Comprobante de estado de cuenta"];
+            const userDocuments = user.documents.map(doc => doc.name);
+
+            const hasAllRequiredDocuments = requiredDocuments.every(doc => userDocuments.includes(doc));
+
+            if (!hasAllRequiredDocuments) {
+                throw new Error("El usuario no ha cargado todos los documentos requeridos");
+            }
+
+            user.role = "premium";
+            await user.save();
+
+            return user;
+        } catch (error) {
+            req.logger.error("Error al actualizar usuario a premium:", error.message);
             throw error;
         }
     }

@@ -5,15 +5,16 @@ import { errorTypes } from "../utils/errorTypes.js";
 import { isAdmin, isPremium } from "../middlewares/adminAuth.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { auth } from "../middlewares/auth.js";
-import { upload } from "../utils.js";
+import { configureDocumentMulter } from "../utils.js";
 
 const productRouter = express.Router();
+const image = configureDocumentMulter()
 
 // Middleware de autenticación
 productRouter.get("/", auth, productController.getProducts);
 
 // Ruta para actualizar un producto y añadirle una imagen
-productRouter.put("/updateProductImage/:pid", upload.single('thumbnail'), productController.updateProductImage);
+productRouter.put("/updateProductImage/:pid", image.single('thumbnail'), productController.updateProductImage);
 
 // Ruta para generar productos ficticios
 productRouter.get("/mockingproducts", (req, res) => {
@@ -31,7 +32,7 @@ productRouter.get("/view", productController.renderProductsPage);
 
 productRouter.get("/:pid", productController.getProductById);
 productRouter.get("/brand/:brand", productController.getByBrand);
-productRouter.post('/addProduct', authenticate, isAdmin,isPremium, upload.array('thumbnails', 5), productController.addProduct);
+productRouter.post('/addProduct', authenticate, isAdmin,isPremium, image.array('thumbnails', 5), productController.addProduct);
 
 productRouter.delete("/:pid", authenticate, productController.deleteProductById);
 

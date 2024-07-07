@@ -210,6 +210,46 @@ const userController = {
                 description: error.message
             }));
         }
+    },
+
+    uploadDocuments: async (req, res, next) => {
+        try {
+            const userId = req.params.uid;
+            const user = await userRepository.findById(userId);
+            if (!user) {
+                req.Logger.error("Error al buscar usuario:", "Usuario no encontrado");
+                return next(new Error("Usuario no encontrado"));
+            }
+
+            const documents = req.files.map((file) => ({
+                name: file.originalname,
+                reference: file.path,
+            }));
+
+            user.documents = [...user.documents, ...documents];
+            await user.save();
+
+            res.send({ message: "Documents uploaded successfully" });
+        } catch (error) {
+            req.logger.error("Error al subir documentos:", error.message);
+            next(error);
+        }
+    },
+
+    upgradeToPremium: async (req, res, next) => {
+        const userId = req.params.uid;
+        try {
+            const user = await userService.upgradeToPremium(userId);
+            res.send({ status: "Success", message: "Usuario actualizado a premium", user });
+        } catch (error) {
+            req.logger.error("Error al actualizar usuario a premium:", error.message);
+            next(CustomError.createError({
+                name: "UpgradeToPremiumError",
+                message: "Error al actualizar usuario a premium",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
     }
 
 };

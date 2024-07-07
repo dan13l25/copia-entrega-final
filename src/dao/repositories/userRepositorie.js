@@ -36,6 +36,17 @@ const userRepository = {
             throw new Error("Error al crear usuario: " + error.message);
         }
     },
+
+    uploadDocuments: async (req, user, documents) => {
+        try {
+            user.documents = [...user.documents, ...documents];
+            await user.save();
+            return user;
+        } catch (error) {
+            req.logger.error("Error al actualizar documentos:", error.message);
+            throw error;
+        }
+    }
 };
 
 export default userRepository;

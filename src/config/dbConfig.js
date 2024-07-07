@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
-import { DB_URL } from "../utils.js";
+import { MONGO_URL } from "../utils.js";
 
 export  const connectMongoDB = async () => {
     try {
-      await mongoose.connect(DB_URL);
+      await mongoose.connect(MONGO_URL);
       console.log("MongoDB conectado");
     } catch (error) {
       console.error("Error al conectar a MongoDB:", error);
