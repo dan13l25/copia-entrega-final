@@ -5,7 +5,7 @@ form.addEventListener("submit", (e) => {
   e.preventDefault();
   const data = new FormData(form);
   const obj = {};
-  data.forEach((value, key) => (obj[key] = value));
+  data.forEach((value, key) => (obj[key] = value));    
   
   fetch("/api/users/register", {
     method: "POST",
@@ -24,7 +24,6 @@ form.addEventListener("submit", (e) => {
     }
   })
   .then(data => {
-    
     const token = data.access_token;
     const userId = data.userId;
     const userRole = data.userRole;

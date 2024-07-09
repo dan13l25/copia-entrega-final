@@ -1,10 +1,11 @@
 import express from 'express';
 import userController from '../controllers/userController.js';
 import passport from 'passport';
-import { configureDocumentMulter } from '../utils.js';
+import { configureDocumentMulter, configureProfileMulter  } from '../utils.js';
 
 const userRouter = express.Router();
 const documentUpload = configureDocumentMulter();
+const profileUpload = configureProfileMulter();
 
 userRouter.get("/login", userController.getLogin);
 userRouter.post("/login", userController.login);
@@ -12,13 +13,15 @@ userRouter.get("/current", passport.authenticate('current', { session: false }),
     res.json(req.user);
 });
 userRouter.get("/register", userController.getRegister);
-userRouter.post("/register", userController.register); 
+userRouter.post("/register", profileUpload.single('profileImage'), userController.register); 
 userRouter.get("/logout", userController.logOut);
 userRouter.post("/logout", userController.logOut);
 userRouter.get("/restore", (req, res) => {
     res.render("restore");
 });
 userRouter.post("/restore", userController.restore);
+
+userRouter.post('/:uid/profile', profileUpload.single('profileImage'), userController.uploadProfileImage);
 
 // Endpoint para subir documentos
 userRouter.post('/:uid/documents', documentUpload.array('documents', 10), userController.uploadDocuments);

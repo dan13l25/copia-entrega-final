@@ -38,16 +38,16 @@ const userService = {
         }
     },
 
-    getRegister: async () => {
+    getRegister: async (req) => {
         try {
             return "register";
         } catch (error) {
-            logger.error("Error al obtener la vista de registro:", error.message);
+            req.logger.error("Error al obtener la vista de registro:", error.message);
             throw error;
         }
     },
 
-    register: async (userData) => {
+    register: async (req, userData) => {
         try {
             const { first_name, last_name, email, age, password } = userData;
 
@@ -66,7 +66,7 @@ const userService = {
 
             return { newUser, access_token };
         } catch (error) {
-            logger.error("Error al registrar usuario:", error.message);
+            req.logger.error("Error al registrar usuario:", error.message);
             throw error;
         }
     },

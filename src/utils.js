@@ -26,13 +26,9 @@ export const isValidPassword = (user, password) => {
     return bcrypt.compareSync(password, user.password);
 };
 
-export function configureDocumentMulter() {
+export function configureMulter(folder) {
     const storage = multer.diskStorage({
         destination: (req, file, cb) => {
-            const docType = file.fieldname;
-            let folder = 'documents';
-            if (docType === 'profile') folder = 'profiles';
-            if (docType === 'product') folder = 'products';
             cb(null, path.join(__dirname, 'public', folder));
         },
         filename: (req, file, cb) => {
@@ -41,6 +37,10 @@ export function configureDocumentMulter() {
     });
 
     return multer({ storage });
-}    
+}
+
+export const configureDocumentMulter = () => configureMulter('documents');
+export const configureProductMulter = () => configureMulter('products');
+export const configureProfileMulter = () => configureMulter('profiles');
 
 export default __dirname;

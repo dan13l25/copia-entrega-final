@@ -59,8 +59,8 @@ const userController = {
     register: async (req, res, next) => {
         const userData = req.body;
         try {
-            const { newUser, access_token } = await userService.register(userData);
-            req.session.token = access_token;
+            const profileImagePath = req.file ? req.file.path : null; 
+            const { newUser, access_token } = await userService.register(userData, profileImagePath); 
             req.session.userId = newUser._id;
             req.session.user = newUser;
             req.session.isAuthenticated = true;
@@ -249,6 +249,25 @@ const userController = {
                 code: errorTypes.ERROR_INTERNAL_ERROR,
                 description: error.message
             }));
+        }
+    },
+
+    uploadProfileImage: async (req, res) => {
+        try {
+            const { uid } = req.params;
+            const user = await User.findById(uid);
+
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            user.profileImage = req.file.path; 
+            await user.save();
+
+            res.status(200).json({ message: 'Profile image uploaded successfully' });
+        } catch (error) {
+            console.error('Error uploading profile image:', error);
+            res.status(500).json({ message: 'Internal server error' });
         }
     }
 

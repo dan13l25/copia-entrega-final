@@ -25,8 +25,8 @@ const userSchema = new Schema({
     resetPasswordExpires: Date,
     documents: [
       {
-          name: { type: String, required: true },
-          reference: { type: String, required: true }
+          name: { type: String },
+          reference: { type: String }
       }
   ],
   last_connection: Date,

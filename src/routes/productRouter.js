@@ -5,10 +5,10 @@ import { errorTypes } from "../utils/errorTypes.js";
 import { isAdmin, isPremium } from "../middlewares/adminAuth.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { auth } from "../middlewares/auth.js";
-import { configureDocumentMulter } from "../utils.js";
+import { configureProductMulter  } from "../utils.js";
 
 const productRouter = express.Router();
-const image = configureDocumentMulter()
+const image = configureProductMulter ()
 
 // Middleware de autenticación
 productRouter.get("/", auth, productController.getProducts);
