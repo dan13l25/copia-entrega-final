@@ -59,8 +59,12 @@ const userService = {
 
             const hashedPassword = await bcrypt.hash(password, 10);
             const userDTO = new UserDTO(first_name, last_name, email, age, hashedPassword);
-
             const newUser = await userRepository.createUser(userDTO);
+
+            if (profileImagePath) {
+                newUser.profileImage = profileImagePath;
+                await newUser.save();
+            }
 
             const access_token = generateToken(newUser);
 
