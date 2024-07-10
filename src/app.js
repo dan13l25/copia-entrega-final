@@ -70,14 +70,26 @@ io.on("connection", (socket) => {
     console.log("Nuevo usuario conectado:", socket.id);
     socket.emit("messageLogs", messages);
 
-    socket.on("message", (data) => {
-        try {
-            messages.push(data); 
-            io.emit("messageLogs", messages); 
-        } catch (error) {
-            console.error("Error al guardar el mensaje:", error);
-        }
-    });
+    socket.on("login", (data) => {
+      socket.username = data.username;
+      socket.profileImage = data.profileImage;
+      socket.emit("messageLogs", messages);
+  });
+
+  socket.on("message", (data) => {
+    try {
+        const messageData = {
+            user: socket.username,
+            profileImage: socket.profileImage,
+            message: data.message,
+            time: data.time
+        };
+        messages.push(messageData); 
+        io.emit("messageLogs", messages); 
+    } catch (error) {
+        console.error("Error al guardar el mensaje:", error);
+    }
+});
 
     socket.on("producto", async () => {
         try {
