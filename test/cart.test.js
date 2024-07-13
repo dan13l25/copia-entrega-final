@@ -5,7 +5,7 @@ import { app, server } from '../src/app.js';
 import CartController from '../src/controllers/cartController.js';
 import cartsModel from '../src/dao/models/cart.js';
 
-const { expect } = chai;
+const { expect } = chai; 
 chai.use(chaiHttp);
 
 describe('Cart API', () => {
