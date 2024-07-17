@@ -1,111 +1,85 @@
-/*import { expect } from "chai";
-import supertest from "supertest"
-import mongoose from "mongoose";
-import path from "path";
-import fs from "fs";
-import { DB_URL } from "../src/utils.js";
-import Product from "../src/dao/models/product.js";
-import __dirname from "../src/utils.js";
+import { expect } from 'chai';
+import supertest from 'supertest';
+import mongoose from 'mongoose';
+import Product from '../src/dao/models/product.js';
+import { MONGO_URL } from '../src/utils.js';
 
+const requester = supertest('http://localhost:8080');
 
-const requester = supertest("http://localhost:8080");
+describe('Product Controller', () => {
+  before(async () => {
+    await mongoose.connect(MONGO_URL);
+  });
 
-let authToken;
-let userId;
-let userRole;
-let productId;
-
-const userCredentials = {
-    email: 'test@example.com',
-    password: 'password123'
-};
-
-const productMock = {
-    title: 'Test Product',
-    brand: 'Example Brand',
-    description: 'This is an example product',
-    price: 3000,
-    stock: 10,
-    category: "tecnologia",
-    owner: null,
-};
-
-before(async function () {
-    await mongoose.connect(DB_URL);
-
-    const loginResponse = await requester.post("/api/users/login").send(userCredentials);
-    expect(loginResponse.statusCode).to.equal(200);
-    console.log("Login exitoso:", loginResponse.body);
-    authToken = loginResponse.body.access_token;
-    userId = loginResponse.body.userId;
-    userRole = loginResponse.body.userRole;
-});
-
-describe("Pruebas para CRUD de productos", function () {
-    beforeEach(async function () {
-        productMock.owner = userId;
-
-        try {
-            const existingProduct = await Product.findOne({ title: productMock.title });
-
-            if (existingProduct) {
-                productId = existingProduct._id;
-                console.log("El producto ya existe:", existingProduct);
-            } else {
-
-                const createProductResponse = await requester
-                    .post("/api/products/")
-                    .set('Authorization', `Bearer ${authToken}`)
-                    .field('title', productMock.title)
-                    .field('brand', productMock.brand)
-                    .field('description', productMock.description)
-                    .field('price', productMock.price)
-                    .field('stock', productMock.stock)
-                    .field('category', productMock.category)
-                    .field('owner', productMock.owner)
-
-                expect(createProductResponse.statusCode).to.equal(200);
-                console.log("Producto creado:", createProductResponse.body);
-                productId = createProductResponse.body.Product._id;
-            }
-        } catch (error) {
-            console.error("Error durante la preparación del producto:", error);
-            throw error;
-        }
-    });
-
-    describe("Ver los productos", () => {
-        it("El endpoint /api/products/ debe mostrar la lista de productos", async function () {
-            try {
-                const productsList = await requester.get("/api/products/");
-
-                expect(productsList.statusCode).to.equal(200);
-                console.log("Lista de los productos:", productsList.body);
-            } catch (error) {
-                console.error("Error en la búsqueda de los productos:", error);
-                throw error;
-            }
-        });
-    });
-
-    describe("Mostrar el producto creado", () => {
-        it("El endpoint /api/products/:pid debe mostrar el producto creado", async function () {
-            try {
-                const productCreatedResponse = await requester
-                    .get(`/api/products/${productId}`);
-
-                expect(productCreatedResponse.statusCode).to.equal(200);
-                console.log("Producto que se ha creado:", productCreatedResponse.text);
-            } catch (error) {
-                console.error("Error durante la solicitud al endpoint:", error);
-                throw error;
-            }
-        });
-    });
-});
-
-after(async function () {
-    await Product.deleteMany({ title: productMock.title });
+  after(async () => {
     await mongoose.disconnect();
+  });
+
+  let productId;
+
+  describe('GET /api/products', () => {
+    it('should return a list of products', async () => {
+      const res = await requester.get('/api/products');
+      expect(res.status).to.equal(200);
+      expect(res.body.docs).to.be.an('array');
+    });
+  });
+
+  describe('GET /api/products/:pid', () => {
+    it('should return a product by id', async () => {
+      const product = await Product.create({
+        title: 'Test Product',
+        description: 'Test Description',
+        code: '123',
+        category: 'Test Category',
+        brand: 'Test Brand',
+        price: 10,
+        stock: 100,
+        status: true,
+        thumbnails: ['image.jpg'],
+        owner: new mongoose.Types.ObjectId() // Proporcionar un ObjectId válido
+      });
+      productId = product._id;
+      const res = await requester.get(`/api/products/${product._id}`);
+      expect(res.status).to.equal(200, `Expected status 200 but got ${res.status}`);
+      expect(res.body).to.have.property('title', 'Test Product');
+    });
+  });
+
+  describe('POST /api/products', () => {
+    it('should create a new product', async () => {
+      const res = await requester.post('/api/products')
+        .send({
+          title: 'New Product',
+          description: 'New Description',
+          code: '456',
+          category: 'New Category',
+          brand: 'New Brand',
+          price: 20,
+          stock: 50,
+          status: true,
+          thumbnails: ['image.jpg'],
+          owner: new mongoose.Types.ObjectId() // Proporcionar un ObjectId válido
+        });
+      expect(res.status).to.equal(201, `Expected status 201 but got ${res.status}`);
+      expect(res.body).to.have.property('title', 'New Product');
+      productId = res.body._id;
+    });
+  });
+
+  describe('PUT /api/products/:pid', () => {
+    it('should update a product', async () => {
+      const res = await requester.put(`/api/products/${productId}`)
+        .send({ title: 'Updated Product', price: 15 });
+      expect(res.status).to.equal(200, `Expected status 200 but got ${res.status}`);
+      expect(res.body).to.have.property('title', 'Updated Product');
+    });
+  });
+
+  describe('DELETE /api/products/:pid', () => {
+    it('should delete a product', async () => {
+      const res = await requester.delete(`/api/products/${productId}`);
+      expect(res.status).to.equal(204, `Expected status 204 but got ${res.status}`);
+    });
+  });
 });
-*/

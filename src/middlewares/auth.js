@@ -9,6 +9,12 @@ export function auth(req, res, next) {
   next();
 }
 
+export function setTestUser(req, res, next) {
+  if (process.env.NODE_ENV === 'test') {
+    req.session = { user: { id: 1, email: 'user@example.com', role: 'admin' } };
+  }
+  next();
+}
 
 export function generateRandomCode(length) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
