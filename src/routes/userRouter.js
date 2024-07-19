@@ -1,38 +1,41 @@
 import express from 'express';
-import userController from '../controllers/userController.js';
+import UserController from "../controllers/userController.js"
 import passport from 'passport';
 import { configureDocumentMulter, configureProfileMulter  } from '../utils.js';
 
 const userRouter = express.Router();
 const documentUpload = configureDocumentMulter();
 const profileUpload = configureProfileMulter();
+const userController = new UserController(); 
 
-userRouter.get("/login", userController.getLogin);
-userRouter.post("/login", userController.login);
+
+userRouter.get("/login", userController.getLogin.bind(userController));
+userRouter.post("/login", userController.login.bind(userController));
 userRouter.get("/current", passport.authenticate('current', { session: false }), (req, res) => {
     res.json(req.user);
 });
-userRouter.get("/register", userController.getRegister);
-userRouter.post("/register", profileUpload.single('profileImage'), userController.register); 
-userRouter.get("/logout", userController.logOut);
-userRouter.post("/logout", userController.logOut);
+userRouter.get("/register", userController.getRegister.bind(userController));
+userRouter.post("/register", profileUpload.single('profileImage'), userController.register.bind(userController)); 
+userRouter.get("/logout", userController.logOut.bind(userController));
+userRouter.post("/logout", userController.logOut.bind(userController));
 userRouter.get("/restore", (req, res) => {
     res.render("restore");
 });
-userRouter.post("/restore", userController.restore);
 
-userRouter.post('/:uid/profile', profileUpload.single('profileImage'), userController.uploadProfileImage);
+userRouter.post("/restore", userController.restorePassword.bind(userController));
+
+userRouter.post('/:uid/profile', profileUpload.single('profileImage'), userController.uploadDocuments.bind(userController));
 
 // Endpoint para subir documentos
-userRouter.post('/:uid/documents', documentUpload.array('documents', 10), userController.uploadDocuments);
+userRouter.post('/:uid/documents', documentUpload.array('documents', 10), userController.uploadDocuments.bind(userController));
 
 // Endpoint para actualizar a premium
-userRouter.post('/premium/:uid', userController.upgradeToPremium);
+userRouter.post('/premium/:uid', userController.upgradeToPremium.bind(userController));
 
 // Recuperación de contraseña por correo 
-userRouter.post('/request-password-reset', userController.requestPasswordReset);
-userRouter.get('/reset-password/:token', userController.getResetPassword);
-userRouter.post('/reset-password', userController.resetPassword);  
+userRouter.post('/request-password-reset', userController.requestPasswordReset.bind(userController));
+userRouter.get('/reset-password/:token', userController.resetPassword.bind(userController));
+userRouter.post('/reset-password', userController.resetPassword.bind(userController));  
 
 // Autenticación con GitHub
 userRouter.get("/github", passport.authenticate("github", { scope: ["user:email"] }));
@@ -40,6 +43,12 @@ userRouter.get("/githubcallback", passport.authenticate("github", { failureRedir
     req.session.user = req.user;
     res.redirect("/chat");
 });
+
+// Endpoints de entrega final
+
+userRouter.get("/", userController.getAllUsers.bind(userController));
+userRouter.delete("/", userController.deleteInactiveUsers.bind(userController));
+userRouter.patch("/update-role", userController.updateUserRole.bind(userController));
 
 //metodo passport
 

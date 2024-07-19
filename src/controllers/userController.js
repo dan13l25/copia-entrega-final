@@ -1,13 +1,16 @@
-import userService from "../dao/services/userService.js";
+import UserService from "../dao/services/userService.js";
 import { errorTypes } from "../utils/errorTypes.js";
 import { CustomError } from "../utils/customError.js";
-import { devLogger as logger } from "../utils/loggers.js";
 import userModel from "../dao/models/users.js";
 
-const userController = {
-    getLogin: async (req, res, next) => {
+class UserController {
+    constructor() {
+        this.userService = new UserService();
+    }
+
+    async getLogin(req, res, next) {
         try {
-            const loginView = await userService.getLogin();
+            const loginView = await this.userService.getLogin();
             res.render(loginView);
         } catch (error) {
             req.logger.error("Error al obtener la vista de inicio de sesión:", error.message);
@@ -18,35 +21,43 @@ const userController = {
                 description: error.message
             }));
         }
-    },
+    }
 
-    login: async (req, res, next) => {
+    async login(req, res, next) {
         const { email, password } = req.body;
         try {
-            const { user, access_token } = await userService.login(email, password);
+            const { user, access_token } = await this.userService.login(email, password);
             req.session.token = access_token;
             req.session.userId = user._id;
-            req.session.user = user;
-            req.session.isAuthenticated = true;
-            res.cookie("jwtToken", access_token, { httpOnly: true })
-               .send({ status: "Success", message: user, access_token, userId: user._id });
+            req.session.user = {
+                name: `${user.first_name} ${user.last_name}`,
+                email: user.email,
+                age: user.age,
+                role: user.role
+            };
+            res.cookie("jwtToken", access_token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "strict"
+            });
+            res.json({ message: "Inicio de sesión exitoso", access_token });
         } catch (error) {
             req.logger.error("Error al iniciar sesión:", error.message);
             next(CustomError.createError({
                 name: "LoginError",
                 message: "Error al iniciar sesión",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
+                code: errorTypes.ERROR_AUTHENTICATION,
                 description: error.message
             }));
         }
-    },
+    }
 
-    getRegister: async (req, res, next) => {
+    async getRegister(req, res, next) {
         try {
-            const registerView = await userService.getRegister();
+            const registerView = await this.userService.getRegister();
             res.render(registerView);
         } catch (error) {
-            req.ogger.error("Error al obtener la vista de registro:", error.message);
+            req.logger.error("Error al obtener la vista de registro:", error.message);
             next(CustomError.createError({
                 name: "GetRegisterError",
                 message: "Error al obtener la vista de registro",
@@ -54,97 +65,43 @@ const userController = {
                 description: error.message
             }));
         }
-    },
+    }
 
-    register: async (req, res, next) => {
+    async register(req, res, next) {
         const userData = req.body;
+        const profileImagePath = req.file ? req.file.path : null;
         try {
-            const profileImagePath = req.file ? req.file.path : null; 
-            const { newUser, access_token } = await userService.register(userData, profileImagePath); 
+            const { newUser, access_token } = await this.userService.register(userData, profileImagePath);
+            req.session.token = access_token;
             req.session.userId = newUser._id;
-            req.session.user = newUser;
-            req.session.isAuthenticated = true;
-            res.cookie("jwtToken", access_token, { httpOnly: true })
-               .send({ status: "Success", message: newUser, access_token, userId: newUser._id });
+            req.session.user = {
+                name: `${newUser.first_name} ${newUser.last_name}`,
+                email: newUser.email,
+                age: newUser.age,
+                role: newUser.role
+            };
+            res.cookie("jwtToken", access_token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "strict"
+            });
+            res.json({ message: "Registro exitoso", newUser });
         } catch (error) {
-            req.logger.error("Error al obtener la vista de registro:", error.message);
+            req.logger.error("Error al registrar usuario:", error.message);
             next(CustomError.createError({
                 name: "RegisterError",
                 message: "Error al registrar usuario",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
+                code: errorTypes.ERROR_AUTHENTICATION,
                 description: error.message
             }));
         }
-    },
+    }
 
-    getGitHub: async (req, res, next) => {
-        try {
-            const githubAuth = await userService.getGitHub();
-            res.redirect(githubAuth);
-        } catch (error) {
-            req.logger.error("Error al obtener la autenticación de GitHub:", error.message);
-            next(CustomError.createError({
-                name: "GitHubAuthError",
-                message: "Error al obtener la autenticación de GitHub",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
-        }
-    },
-
-    gitHubCallback: async (req, res, next) => {
-        try {
-            await userService.gitHubCallback(req, res, next);
-        } catch (error) {
-            req.logger.error("Error en el callback de GitHub:", error.message);
-            next(CustomError.createError({
-                name: "GitHubCallbackError",
-                message: "Error en el callback de GitHub",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
-        }
-    },
-
-    handleGitHubCallback: async (req, res, next) => {
-        try {
-            const { user, access_token } = await userService.handleGitHubCallback(req);
-            req.session.token = access_token;
-            req.session.userId = user._id;
-            req.session.user = user;
-            req.session.isAuthenticated = true;
-            res.cookie("jwtToken", access_token, { httpOnly: true })
-               .send({ status: "Success", message: user, access_token, userId: user._id });
-        } catch (error) {
-            req.logger.error("Error en el callback de GitHub:", error.message);
-            next(CustomError.createError({
-                name: "GitHubHandleCallbackError",
-                message: "Error en el callback de GitHub",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
-        }
-    },
-
-    logOut: async (req, res, next) => {
-        try {
-            await userService.logOut(req, res);
-        } catch (error) {
-            req.logger.error("Error al cerrar sesión:", error.message);
-            next(CustomError.createError({
-                name: "LogOutError",
-                message: "Error al cerrar sesión",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
-        }
-    },
-
-    restore: async (req, res, next) => {
+    async restorePassword(req, res, next) {
         const { email, password } = req.body;
         try {
-            const message = await userService.restorePassword(email, password);
-            res.send({ message });
+            const message = await this.userService.restorePassword(email, password);
+            res.json({ message });
         } catch (error) {
             req.logger.error("Error al restaurar la contraseña:", error.message);
             next(CustomError.createError({
@@ -154,13 +111,27 @@ const userController = {
                 description: error.message
             }));
         }
-    },
+    }
 
-    requestPasswordReset: async (req, res, next) => {
+    async logOut(req, res, next) {
+        try {
+            await this.userService.logOut(req, res);
+        } catch (error) {
+            req.logger.error("Error al cerrar sesión:", error.message);
+            next(CustomError.createError({
+                name: "LogOutError",
+                message: "Error al cerrar sesión",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
+    }
+
+    async requestPasswordReset(req, res, next) {
         const { email } = req.body;
         try {
-            const message = await userService.requestPasswordReset(email);
-            res.send({ message });
+            const message = await this.userService.requestPasswordReset(email);
+            res.json({ message });
         } catch (error) {
             req.logger.error("Error al solicitar restablecimiento de contraseña:", error.message);
             next(CustomError.createError({
@@ -170,37 +141,13 @@ const userController = {
                 description: error.message
             }));
         }
-    },
+    }
 
-    getResetPassword: async (req, res, next) => {
-        const { token } = req.params;
-        try {
-            const user = await userModel.findOne({
-                resetPasswordToken: token,
-                resetPasswordExpires: { $gt: Date.now() }
-            });
-
-            if (!user) {
-                return res.render('expiredToken', { message: "El enlace de restablecimiento ha expirado." });
-            }
-
-            res.render('resetPassword', { token });
-        } catch (error) {
-            req.logger.error("Error al obtener la vista de restablecimiento de contraseña:", error.message);
-            next(CustomError.createError({
-                name: "GetResetPasswordError",
-                message: "Error al obtener la vista de restablecimiento de contraseña",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
-        }
-    },
-
-    resetPassword: async (req, res, next) => {
+    async resetPassword(req, res, next) {
         const { token, newPassword } = req.body;
         try {
-            const message = await userService.resetPassword(token, newPassword);
-            res.send({ message });
+            const message = await this.userService.resetPassword(token, newPassword);
+            res.json({ message });
         } catch (error) {
             req.logger.error("Error al restablecer la contraseña:", error.message);
             next(CustomError.createError({
@@ -210,37 +157,29 @@ const userController = {
                 description: error.message
             }));
         }
-    },
+    }
 
-    uploadDocuments: async (req, res, next) => {
+    async uploadDocuments(req, res, next) {
+        const { user, documents } = req.body;
         try {
-            const userId = req.params.uid;
-            const user = await userRepository.findById(userId);
-            if (!user) {
-                req.Logger.error("Error al buscar usuario:", "Usuario no encontrado");
-                return next(new Error("Usuario no encontrado"));
-            }
-
-            const documents = req.files.map((file) => ({
-                name: file.originalname,
-                reference: file.path,
-            }));
-
-            user.documents = [...user.documents, ...documents];
-            await user.save();
-
-            res.send({ message: "Documents uploaded successfully" });
+            const updatedUser = await this.userService.uploadDocuments(req, user, documents);
+            res.json({ updatedUser });
         } catch (error) {
-            req.logger.error("Error al subir documentos:", error.message);
-            next(error);
+            req.logger.error("Error al actualizar documentos:", error.message);
+            next(CustomError.createError({
+                name: "UploadDocumentsError",
+                message: "Error al actualizar documentos",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
         }
-    },
+    }
 
-    upgradeToPremium: async (req, res, next) => {
-        const userId = req.params.uid;
+    async upgradeToPremium(req, res, next) {
+        const { userId } = req.params;
         try {
-            const user = await userService.upgradeToPremium(userId);
-            res.send({ status: "Success", message: "Usuario actualizado a premium", user });
+            const user = await this.userService.upgradeToPremium(userId);
+            res.json({ user });
         } catch (error) {
             req.logger.error("Error al actualizar usuario a premium:", error.message);
             next(CustomError.createError({
@@ -250,27 +189,54 @@ const userController = {
                 description: error.message
             }));
         }
-    },
+    }
 
-    uploadProfileImage: async (req, res) => {
+    async getAllUsers(req, res, next) {
         try {
-            const { uid } = req.params;
-            const user = await User.findById(uid);
-
-            if (!user) {
-                return res.status(404).json({ message: 'User not found' });
-            }
-
-            user.profileImage = req.file.path; 
-            await user.save();
-
-            res.status(200).json({ message: 'Profile image uploaded successfully' });
+            const users = await this.userService.getAllUsers();
+            res.json(users);
         } catch (error) {
-            console.error('Error uploading profile image:', error);
-            res.status(500).json({ message: 'Internal server error' });
+            req.logger.error("Error al obtener todos los usuarios:", error.message);
+            next(CustomError.createError({
+                name: "GetAllUsersError",
+                message: "Error al obtener todos los usuarios",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
         }
     }
 
-};
+    async deleteInactiveUsers(req, res, next) {
+        try {
+            const result = await this.userService.deleteInactiveUsers();
+            res.json(result);
+        } catch (error) {
+            req.logger.error("Error al eliminar usuarios inactivos:", error.message);
+            next(CustomError.createError({
+                name: "DeleteInactiveUsersError",
+                message: "Error al eliminar usuarios inactivos",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
+    }
 
-export default userController;
+    async updateUserRole(req, res, next) {
+        const { userId } = req.params;
+        const { role } = req.body;
+        try {
+            const user = await this.userService.updateUserRole(userId, role);
+            res.json({ user });
+        } catch (error) {
+            req.logger.error("Error al actualizar rol de usuario:", error.message);
+            next(CustomError.createError({
+                name: "UpdateUserRoleError",
+                message: "Error al actualizar rol de usuario",
+                code: errorTypes.ERROR_INTERNAL_ERROR,
+                description: error.message
+            }));
+        }
+    }
+}
+
+export default UserController;

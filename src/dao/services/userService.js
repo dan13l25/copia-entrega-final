@@ -1,25 +1,26 @@
 import userRepository from "../repositories/userRepositorie.js";
 import bcrypt from "bcrypt";
 import { generateToken } from "../../config/jwtConfig.js";
-import { createHash, isValidPassword } from "../../utils.js";
-import { ADMIN_EMAIL, ADMIN_PASSWORD,EMAIL_USERNAME } from "../../utils.js";
+import { createHash, isValidPassword, ADMIN_EMAIL, ADMIN_PASSWORD, EMAIL_USERNAME } from "../../utils.js";
 import UserDTO from "../dto/UserDTO.js";
 import { devLogger as logger } from "../../utils/loggers.js";
-import crypto from "crypto"
+import crypto from "crypto";
 import { transporter } from "../../config/mailer.js";
 import userModel from "../models/users.js";
 
-const userService = {
-    login: async (email, password) => {
+class UserService {
+    async getLogin() {
+        return "login";
+    }
+
+    async login(email, password) {
         try {
             const user = await userRepository.findByEmail(email);
-
             if (!user) {
                 throw new Error("Credenciales inválidas");
             }
 
             const validPassword = isValidPassword(user, password);
-
             if (!validPassword) {
                 throw new Error("Credenciales inválidas");
             }
@@ -27,6 +28,7 @@ const userService = {
             if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
                 user.role = "admin";
             }
+
             user.last_connection = new Date();
             await user.save();
             const access_token = generateToken(user);
@@ -36,23 +38,22 @@ const userService = {
             logger.error("Error al iniciar sesión:", error.message);
             throw error;
         }
-    },
+    }
 
-    getRegister: async (req) => {
+    async getRegister() {
         try {
             return "register";
         } catch (error) {
-            req.logger.error("Error al obtener la vista de registro:", error.message);
+            logger.error("Error al obtener la vista de registro:", error.message);
             throw error;
         }
-    },
+    }
 
-    register: async (req, userData) => {
+    async register(userData, profileImagePath) {
         try {
             const { first_name, last_name, email, age, password } = userData;
 
             const existingUser = await userRepository.findByEmail(email);
-
             if (existingUser) {
                 throw new Error("El usuario ya existe");
             }
@@ -67,24 +68,21 @@ const userService = {
             }
 
             const access_token = generateToken(newUser);
-
             return { newUser, access_token };
         } catch (error) {
-            req.logger.error("Error al registrar usuario:", error.message);
+            logger.error("Error al registrar usuario:", error.message);
             throw error;
         }
-    },
+    }
 
-    restorePassword: async (email, password) => {
+    async restorePassword(email, password) {
         try {
             const user = await userRepository.findByEmail(email);
-
             if (!user) {
                 throw new Error("Usuario no encontrado");
             }
 
             const newPass = createHash(password);
-
             await userModel.updateOne({ _id: user._id }, { $set: { password: newPass } });
 
             return "Password actualizado";
@@ -92,27 +90,25 @@ const userService = {
             logger.error("Error al restaurar la contraseña:", error.message);
             throw error;
         }
-    },
+    }
 
-    logOut: async (req, res) => {
+    async logOut(req, res) {
         try {
             res.clearCookie("jwtToken");
-            
             req.session.destroy((err) => {
                 if (err) {
                     logger.error("Error al cerrar sesión:", err.message);
                     return res.status(500).json({ error: "Error interno del servidor" });
                 }
-                
                 res.redirect("/login");
             });
         } catch (error) {
             logger.error("Error al cerrar sesión:", error.message);
             res.status(500).json({ error: "Error interno del servidor" });
         }
-    },
+    }
 
-    requestPasswordReset: async (email) => {
+    async requestPasswordReset(email) {
         try {
             const user = await userRepository.findByEmail(email);
             if (!user) {
@@ -120,7 +116,7 @@ const userService = {
             }
 
             const token = crypto.randomBytes(20).toString('hex');
-            const expirationDate = Date.now() + 3600000; 
+            const expirationDate = Date.now() + 3600000; // 1 hour
 
             user.resetPasswordToken = token;
             user.resetPasswordExpires = expirationDate;
@@ -132,22 +128,21 @@ const userService = {
                 to: user.email,
                 from: EMAIL_USERNAME,
                 subject: 'Restablecer contraseña',
-                text: `Recibiste este correo porque tú (o alguien mas) solicito el restablecer la contraseña de tu cuenta.\n\n
+                text: `Recibiste este correo porque tú (o alguien más) solicitó el restablecimiento de la contraseña de tu cuenta.\n\n
                 Por favor, haz clic en el siguiente enlace, o pégalo en tu navegador para completar el proceso:\n\n
                 ${resetLink}\n\n
                 Si no has solicitado esto, por favor ignora este correo y tu contraseña permanecerá sin cambios.\n`
             };
 
             await transporter.sendMail(mailOptions);
-
             return "Correo de restablecimiento enviado";
         } catch (error) {
             logger.error("Error al solicitar restablecimiento de contraseña:", error.message);
             throw error;
         }
-    },
+    }
 
-    resetPassword: async (token, newPassword) => {
+    async resetPassword(token, newPassword) {
         try {
             const user = await userModel.findOne({
                 resetPasswordToken: token,
@@ -172,19 +167,19 @@ const userService = {
             logger.error("Error al restablecer la contraseña:", error.message);
             throw error;
         }
-    },
+    }
 
-    uploadDocuments: async (req, user, documents) => {
+    async uploadDocuments(req, user, documents) {
         try {
             const updatedUser = await userRepository.uploadDocuments(req, user, documents);
             return updatedUser;
         } catch (error) {
-            req.logger.error("Error al actualizar documentos:", error.message);
+            logger.error("Error al actualizar documentos:", error.message);
             throw error;
         }
-    },
+    }
 
-    upgradeToPremium: async (req, userId) => {
+    async upgradeToPremium(userId) {
         try {
             const user = await userRepository.findById(userId);
             if (!user) {
@@ -205,10 +200,40 @@ const userService = {
 
             return user;
         } catch (error) {
-            req.logger.error("Error al actualizar usuario a premium:", error.message);
+            logger.error("Error al actualizar usuario a premium:", error.message);
             throw error;
         }
     }
-};
 
-export default userService;
+    async getAllUsers() {
+        try {
+            const users = await userRepository.findAll();
+            return users;
+        } catch (error) {
+            logger.error("Error al obtener todos los usuarios:", error.message);
+            throw error;
+        }
+    }
+
+    async deleteInactiveUsers() {
+        try {
+            const result = await userRepository.deleteInactive();
+            return result;
+        } catch (error) {
+            logger.error("Error al eliminar usuarios inactivos:", error.message);
+            throw error;
+        }
+    }
+
+    async updateUserRole(userId, role) {
+        try {
+            const user = await userRepository.updateRole(userId, role);
+            return user;
+        } catch (error) {
+            logger.error("Error al actualizar rol de usuario:", error.message);
+            throw error;
+        }
+    }
+}
+
+export default UserService;

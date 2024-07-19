@@ -46,6 +46,51 @@ const userRepository = {
             req.logger.error("Error al actualizar documentos:", error.message);
             throw error;
         }
+    },
+
+    findAll: async () => {
+        try {
+            const users = await userModel.find({}, 'first_name last_name email role');
+            return users;
+        } catch (error) {
+            throw new Error("Error al obtener todos los usuarios: " + error.message);
+        }
+    },
+    
+    deleteInactive: async () => {
+        try {
+            const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+            const usersToDelete = await userModel.find({ last_connection: { $lt: twoDaysAgo } });
+
+            for (const user of usersToDelete) {
+                const mailOptions = {
+                    to: user.email,
+                    from: EMAIL_USERNAME,
+                    subject: 'Cuenta eliminada por inactividad',
+                    text: `Tu cuenta ha sido eliminada debido a inactividad por más de 2 días.`
+                };
+                await transporter.sendMail(mailOptions);
+            }
+
+            const result = await userModel.deleteMany({ last_connection: { $lt: twoDaysAgo } });
+            return { message: "Usuarios inactivos eliminados", result };
+        } catch (error) {
+            throw new Error("Error al eliminar usuarios inactivos: " + error.message);
+        }
+    },
+
+    updateRole: async (userId, role) => {
+        try {
+            const user = await userModel.findById(userId);
+            if (!user) {
+                throw new Error("Usuario no encontrado");
+            }
+            user.role = role;
+            await user.save();
+            return user;
+        } catch (error) {
+            throw new Error("Error al actualizar rol de usuario: " + error.message);
+        }
     }
 };
 
