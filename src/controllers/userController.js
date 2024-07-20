@@ -1,7 +1,6 @@
 import UserService from "../dao/services/userService.js";
 import { errorTypes } from "../utils/errorTypes.js";
 import { CustomError } from "../utils/customError.js";
-import userModel from "../dao/models/users.js";
 
 class UserController {
     constructor() {
@@ -160,15 +159,17 @@ class UserController {
     }
 
     async uploadDocuments(req, res, next) {
-        const { user, documents } = req.body;
+        const userId = req.params.uid;  
+        const documents = req.files;    
         try {
-            const updatedUser = await this.userService.uploadDocuments(req, user, documents);
+            const updatedUser = await this.userService.uploadDocuments(userId, documents);
             res.json({ updatedUser });
+            res.status(200).json({ message: 'Documentos subidos exitosamente' })
         } catch (error) {
             req.logger.error("Error al actualizar documentos:", error.message);
             next(CustomError.createError({
-                name: "UploadDocumentsError",
-                message: "Error al actualizar documentos",
+                name: 'UploadError',
+                message: 'Error al subir documentos',
                 code: errorTypes.ERROR_INTERNAL_ERROR,
                 description: error.message
             }));

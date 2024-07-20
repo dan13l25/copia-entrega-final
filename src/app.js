@@ -9,10 +9,13 @@ import { middlewareConfig, configureSwagger } from "./config/middlewareConfig.js
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { addLogger } from "./utils/loggers-env.js";
 import cartService from "./dao/services/cartService.js";
+import cors from "cors"
 
 const app = express(); 
 const port = process.env.PORT || 8080;
 const server = app.listen(port, () => console.log("Servidor operando en puerto", port));
+
+app.use(cors());
  
 //configuracion de swagger
 configureSwagger(app);

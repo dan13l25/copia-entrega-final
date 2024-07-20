@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import { PRIVATE_KEY } from "../utils.js";
-import { errorTypes } from "../utils/errorTypes.js";
 
 export const authToken = (req, res, next) => {
     const authHeader = req.headers.authorization;

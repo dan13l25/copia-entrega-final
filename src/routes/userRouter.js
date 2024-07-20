@@ -29,6 +29,12 @@ userRouter.post('/:uid/profile', profileUpload.single('profileImage'), userContr
 // Endpoint para subir documentos
 userRouter.post('/:uid/documents', documentUpload.array('documents', 10), userController.uploadDocuments.bind(userController));
 
+// endpoint para renderizar subida de documentos
+userRouter.get('/:uid/upload', (req, res) => {
+    const userId = req.params.uid;
+    res.render('uploadDocuments', { userId });
+});
+
 // Endpoint para actualizar a premium
 userRouter.post('/premium/:uid', userController.upgradeToPremium.bind(userController));
 
