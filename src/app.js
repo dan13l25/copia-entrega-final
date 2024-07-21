@@ -70,58 +70,57 @@ const io = new Server(server);
 const messages = [];
 
 io.on("connection", (socket) => {
-    console.log("Nuevo usuario conectado:", socket.id);
-    socket.emit("messageLogs", messages);
+  console.log("Nuevo usuario conectado:", socket.id);
+  socket.emit("messageLogs", messages);
 
-    socket.on("login", (data) => {
-      socket.username = data.username;
-      socket.profileImage = data.profileImage;
-      socket.emit("messageLogs", messages);
+  socket.on("login", (data) => {
+    socket.username = data.username;
+    socket.profileImage = data.profileImage;
+    socket.emit("messageLogs", messages);
   });
 
   socket.on("message", (data) => {
     try {
-        const messageData = {
-            user: socket.username,
-            profileImage: socket.profileImage,
-            message: data.message,
-            time: data.time
-        };
-        messages.push(messageData); 
-        io.emit("messageLogs", messages); 
+      const messageData = {
+        user: socket.username,
+        profileImage: socket.profileImage,
+        message: data.message,
+        time: data.time
+      };
+      messages.push(messageData); 
+      io.emit("messageLogs", messages); 
     } catch (error) {
-        console.error("Error al guardar el mensaje:", error);
+      console.error("Error al guardar el mensaje:", error);
     }
-});
+  });
 
-    socket.on("producto", async () => {
-        try {
-            const allProduct = await productService.getProducts();
-            console.log(allProduct);
-            io.emit("producto", allProduct);
-        } catch (error) {
-            console.error("Error al mostrar productos:", error);
-        }
-    });
+  socket.on("producto", async () => {
+    try {
+      const allProduct = await productService.getProducts();
+      console.log(allProduct);
+      io.emit("producto", allProduct);
+    } catch (error) {
+      console.error("Error al mostrar productos:", error);
+    }
+  });
 
-    socket.on("addToCart", async ({ productId }) => {
-      try {
-          console.log("Product ID received:", productId);
-  
-          const product = await productService.getProductById(productId);
-          if (!product) {
-              console.error("Producto no encontrado:", productId);
-              socket.emit('cartUpdated', 'Producto no encontrado.');
-              return;
-          }
-  
-          const userId = socket.handshake.session.user._id; 
-          await cartService.addToCart(userId, productId);
-          socket.emit('cartUpdated', 'Producto agregado al carrito con éxito.');
-      } catch (error) {
-          console.error("Error al agregar el producto al carrito:", error);
-          socket.emit('cartUpdated', 'Error al agregar el producto al carrito.');
+  socket.on("addToCart", async ({ productId }) => {
+    try {
+      console.log("Product ID received:", productId);
+      const product = await productService.getProductById(productId);
+      if (!product) {
+        console.error("Producto no encontrado:", productId);
+        socket.emit('cartUpdated', 'Producto no encontrado.');
+        return;
       }
+
+      const userId = socket.handshake.session.user ? socket.handshake.session.user._id : 'default-user-id'; 
+      await cartService.addToCart(userId, productId);
+      socket.emit('cartUpdated', 'Producto agregado al carrito con éxito.');
+    } catch (error) {
+      console.error("Error al agregar el producto al carrito:", error);
+      socket.emit('cartUpdated', 'Error al agregar el producto al carrito.');
+    }
   });
 });
 

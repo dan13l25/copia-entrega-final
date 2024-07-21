@@ -1,5 +1,17 @@
-<h1>Subir Documentos</h1>
-    <form action="/api/users/{{userId}}/documents" method="POST" enctype="multipart/form-data">
-        <input type="file" name="documents" multiple>
-        <button type="submit">Subir</button>
-    </form>
+<div class="container mt-3">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h1>Subir documentos</h1>
+            <div id="errorMessage" class="alert alert-danger" role="alert" style="display: none;"></div>
+            <form id="uploadDocsForm" method="POST" enctype="multipart/form-data">
+                <div>
+                    <label>Suba sus archivos:</label>
+                    <input type="file" name="documents" id="documents" max="10" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="/js/upload.js"></script>

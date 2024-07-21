@@ -3,6 +3,7 @@ import ProductDTO from "../dao/DTO/productDTO.js";
 import { errorTypes } from "../utils/errorTypes.js";
 import { succesTypes } from "../utils/errorTypes.js";
 import { CustomError } from "../utils/customError.js";
+import { transporter } from "../config/mailer.js";
 
 class ProductController {
     constructor() {
@@ -45,11 +46,13 @@ class ProductController {
             const limit = parseInt(req.query.limit) || 4;
             const page = parseInt(req.query.page) || 1;
             const options = { limit, page, lean: true };
+    
             const result = await productService.paginateProducts(options);
             const products = result.docs;
             const totalPages = result.totalPages;
             const currentPage = result.page;
-            res.render("product", { products, totalPages, currentPage });
+    
+            res.render("product", { products, totalPages, currentPage, limit });
         } catch (error) {
             req.logger.error("Error al renderizar la página de productos paginados:", error.message);
             next(CustomError.createError({
@@ -175,6 +178,16 @@ class ProductController {
             }
 
             await productService.deleteProductById(pid);
+
+            if (userRole === "premium") {
+                await transporter.sendMail({
+                    from: '"Tu Empresa" <tuemail@dominio.com>',
+                    to: userEmail,
+                    subject: "Producto eliminado",
+                    text: `Tu producto con ID: ${pid} ha sido eliminado.`,
+                });
+            }
+
             res.json({ message: "Producto eliminado correctamente" });
         } catch (error) {
             req.logger.error("Error al eliminar el producto:", error.message);

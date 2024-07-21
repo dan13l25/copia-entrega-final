@@ -27,6 +27,7 @@ const productRepositorie = {
             const products = await Product.find();
             return products;
         } catch (error) {
+            console.error("Error al leer los productos:", error.message);
             throw error;
         }
     },
@@ -94,13 +95,13 @@ const productRepositorie = {
         }
     },
 
-    paginateProducts: async (options) => {
-        try {
-            return await Product.paginate({}, options);
-        } catch (error) {
-            throw error;
-        }
-    },
+        paginateProducts: async (options) => {
+            try {
+                return await Product.paginate({}, options);
+            } catch (error) {
+                throw error;
+            }
+        },
 
     updateProductImage: async (id, thumbnail) => {
         try {

@@ -66,7 +66,12 @@ const productService = {
 
     paginateProducts: async (req, options) => {
         try {
-            return await productRepositorie.paginateProducts(options);
+            const result = await productRepositorie.paginateProducts(options);
+            return {
+                docs: result.docs,
+                totalPages: result.totalPages,
+                page: result.page
+            };
         } catch (error) {
             req.logger.error("Error al paginar los productos:", error.message);
             throw error;

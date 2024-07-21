@@ -84,7 +84,7 @@ class UserController {
                 secure: true,
                 sameSite: "strict"
             });
-            res.json({ message: "Registro exitoso", newUser });
+            res.render('registerSuccess', { newUser, message: "Registro exitoso" });
         } catch (error) {
             req.logger.error("Error al registrar usuario:", error.message);
             next(CustomError.createError({
@@ -164,7 +164,7 @@ class UserController {
         try {
             const updatedUser = await this.userService.uploadDocuments(userId, documents);
             res.json({ updatedUser });
-            res.status(200).json({ message: 'Documentos subidos exitosamente' })
+            res.status(200).json({ message: 'Documentos subidos exitosamente' });
         } catch (error) {
             req.logger.error("Error al actualizar documentos:", error.message);
             next(CustomError.createError({
