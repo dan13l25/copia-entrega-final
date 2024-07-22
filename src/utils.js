@@ -19,6 +19,7 @@ export const CLIENT_SECRET = process.env.CLIENT_SECRET;
 export const CALLBACK_URL = process.env.CALLBACK_URL;
 export const EMAIL_USERNAME = process.env.EMAIL_USERNAME;
 export const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
+export const PORT = process.env.PORT;
 
 export const createHash = (password) => bcrypt.hashSync(password, bcrypt.genSaltSync(10));
 export const isValidPassword = (user, password) => {

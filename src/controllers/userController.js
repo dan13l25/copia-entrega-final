@@ -1,226 +1,150 @@
-import UserService from "../dao/services/userService.js";
-import { errorTypes } from "../utils/errorTypes.js";
-import { CustomError } from "../utils/customError.js";
+import UserService from "../dao/services/userService.js"
+import { devLogger as logger } from "../utils/loggers.js"
 
-class UserController {
-    constructor() {
-        this.userService = new UserService();
-    }
+const userService = new UserService();
 
-    async getLogin(req, res, next) {
+const userController = {
+    getLogin: async (req, res) => {
         try {
-            const loginView = await this.userService.getLogin();
-            res.render(loginView);
+            const result = await userService.getLogin();
+            res.render(result);
         } catch (error) {
-            req.logger.error("Error al obtener la vista de inicio de sesión:", error.message);
-            next(CustomError.createError({
-                name: "GetLoginError",
-                message: "Error al obtener la vista de inicio de sesión",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
+            logger.error("Error al obtener la vista de login:", error.message);
+            res.status(500).json({ error: "Error interno del servidor" });
         }
-    }
+    },
 
-    async login(req, res, next) {
+    login: async (req, res) => {
         const { email, password } = req.body;
         try {
-            const { user, access_token } = await this.userService.login(email, password);
-            req.session.token = access_token;
-            req.session.userId = user._id;
-            req.session.user = {
-                name: `${user.first_name} ${user.last_name}`,
-                email: user.email,
-                age: user.age,
-                role: user.role
-            };
-            res.cookie("jwtToken", access_token, {
-                httpOnly: true,
-                secure: true,
-                sameSite: "strict"
-            });
-            res.json({ message: "Inicio de sesión exitoso", access_token });
+            const { user, access_token } = await userService.login(email, password);
+            res.cookie("jwtToken", access_token, { httpOnly: true });
+            res.status(200).json({ message: "Login successful", user });
         } catch (error) {
-            req.logger.error("Error al iniciar sesión:", error.message);
-            next(CustomError.createError({
-                name: "LoginError",
-                message: "Error al iniciar sesión",
-                code: errorTypes.ERROR_AUTHENTICATION,
-                description: error.message
-            }));
+            logger.error("Error al iniciar sesión:", error.message);
+            res.status(401).json({ error: "Credenciales inválidas" });
         }
-    }
+    },
 
-    async getRegister(req, res, next) {
+    getRegister: async (req, res) => {
         try {
-            const registerView = await this.userService.getRegister();
-            res.render(registerView);
+            const result = await userService.getRegister();
+            res.render(result);
         } catch (error) {
-            req.logger.error("Error al obtener la vista de registro:", error.message);
-            next(CustomError.createError({
-                name: "GetRegisterError",
-                message: "Error al obtener la vista de registro",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
+            logger.error("Error al obtener la vista de registro:", error.message);
+            res.status(500).json({ error: "Error interno del servidor" });
         }
-    }
+    },
 
-    async register(req, res, next) {
-        const userData = req.body;
-        const profileImagePath = req.file ? req.file.path : null;
+    register: async (req, res) => {
         try {
-            const { newUser, access_token } = await this.userService.register(userData, profileImagePath);
-            req.session.token = access_token;
-            req.session.userId = newUser._id;
-            req.session.user = {
-                name: `${newUser.first_name} ${newUser.last_name}`,
-                email: newUser.email,
-                age: newUser.age,
-                role: newUser.role
-            };
-            res.cookie("jwtToken", access_token, {
-                httpOnly: true,
-                secure: true,
-                sameSite: "strict"
-            });
-            res.render('registerSuccess', { newUser, message: "Registro exitoso" });
+            const profileImagePath = req.file ? req.file.path : null;
+            const { body: userData } = req;
+            const { newUser, access_token } = await userService.register(userData, profileImagePath);
+            res.cookie("jwtToken", access_token, { httpOnly: true });
+            res.status(201).json({ message: "Usuario registrado exitosamente", user: newUser });
         } catch (error) {
-            req.logger.error("Error al registrar usuario:", error.message);
-            next(CustomError.createError({
-                name: "RegisterError",
-                message: "Error al registrar usuario",
-                code: errorTypes.ERROR_AUTHENTICATION,
-                description: error.message
-            }));
+            logger.error("Error al registrar usuario:", error.message);
+            res.status(400).json({ error: error.message });
         }
-    }
+    },
 
-    async restorePassword(req, res, next) {
+    restorePassword: async (req, res) => {
         const { email, password } = req.body;
         try {
-            const message = await this.userService.restorePassword(email, password);
-            res.json({ message });
+            const result = await userService.restorePassword(email, password);
+            res.status(200).json({ message: result });
         } catch (error) {
-            req.logger.error("Error al restaurar la contraseña:", error.message);
-            next(CustomError.createError({
-                name: "RestorePasswordError",
-                message: "Error al restaurar la contraseña",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
+            logger.error("Error al restaurar la contraseña:", error.message);
+            res.status(500).json({ error: "Error interno del servidor" });
         }
-    }
+    },
 
-    async logOut(req, res, next) {
+    logOut: async (req, res) => {
         try {
-            await this.userService.logOut(req, res);
+            await userService.logOut(req, res);
         } catch (error) {
-            req.logger.error("Error al cerrar sesión:", error.message);
-            next(CustomError.createError({
-                name: "LogOutError",
-                message: "Error al cerrar sesión",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
+            logger.error("Error al cerrar sesión:", error.message);
+            res.status(500).json({ error: "Error interno del servidor" });
         }
-    }
+    },
 
-    async requestPasswordReset(req, res, next) {
+    requestPasswordReset: async (req, res) => {
         const { email } = req.body;
         try {
-            const message = await this.userService.requestPasswordReset(email);
-            res.json({ message });
+            const result = await userService.requestPasswordReset(email);
+            res.status(200).json({ message: result });
         } catch (error) {
-            req.logger.error("Error al solicitar restablecimiento de contraseña:", error.message);
-            next(CustomError.createError({
-                name: "RequestPasswordResetError",
-                message: "Error al solicitar restablecimiento de contraseña",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
+            logger.error("Error al solicitar restablecimiento de contraseña:", error.message);
+            res.status(500).json({ error: "Error interno del servidor" });
         }
-    }
+    },
 
-    async resetPassword(req, res, next) {
+    resetPassword: async (req, res) => {
         const { token, newPassword } = req.body;
         try {
-            const message = await this.userService.resetPassword(token, newPassword);
-            res.json({ message });
+            const result = await userService.resetPassword(token, newPassword);
+            res.status(200).json({ message: result });
         } catch (error) {
-            req.logger.error("Error al restablecer la contraseña:", error.message);
-            next(CustomError.createError({
-                name: "ResetPasswordError",
-                message: "Error al restablecer la contraseña",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
+            logger.error("Error al restablecer la contraseña:", error.message);
+            res.status(500).json({ error: "Error interno del servidor" });
         }
-    }
+    },
 
-    async uploadDocuments(req, res, next) {
-        const userId = req.params.uid;  
-        const documents = req.files;    
-        try {
-            const updatedUser = await this.userService.uploadDocuments(userId, documents);
-            res.json({ updatedUser });
-            res.status(200).json({ message: 'Documentos subidos exitosamente' });
-        } catch (error) {
-            req.logger.error("Error al actualizar documentos:", error.message);
-            next(CustomError.createError({
-                name: 'UploadError',
-                message: 'Error al subir documentos',
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
-        }
-    }
+    uploadDocuments: async (req, res) => {
+        const userId = req.params.userId;
+        const documents = req.files.map(file => ({ name: file.originalname, path: file.path }));
 
-    async upgradeToPremium(req, res, next) {
-        const { userId } = req.params;
         try {
-            const user = await this.userService.upgradeToPremium(userId);
-            res.json({ user });
+            const updatedUser = await userService.uploadDocuments(userId, documents);
+            res.status(200).json({ message: "Documentos subidos con éxito", user: updatedUser });
         } catch (error) {
-            req.logger.error("Error al actualizar usuario a premium:", error.message);
-            next(CustomError.createError({
-                name: "UpgradeToPremiumError",
-                message: "Error al actualizar usuario a premium",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
+            logger.error("Error al subir documentos:", error.message);
+            res.status(500).json({ error: "Error interno del servidor" });
         }
-    }
+    },
 
-    async getAllUsers(req, res, next) {
+    upgradeToPremium: async (req, res) => {
+        const userId = req.params.userId;
         try {
-            const users = await this.userService.getAllUsers();
-            res.json(users);
+            const updatedUser = await userService.upgradeToPremium(userId);
+            res.status(200).json({ message: "Usuario promovido a premium", user: updatedUser });
         } catch (error) {
-            req.logger.error("Error al obtener todos los usuarios:", error.message);
-            next(CustomError.createError({
-                name: "GetAllUsersError",
-                message: "Error al obtener todos los usuarios",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
+            logger.error("Error al promover usuario a premium:", error.message);
+            res.status(400).json({ error: error.message });
         }
-    }
+    },
 
-    async deleteInactiveUsers(req, res, next) {
+    getUsers: async (req, res) => {
         try {
-            const result = await this.userService.deleteInactiveUsers();
-            res.json(result);
+            const users = await userService.getUsers();
+            res.status(200).json(users);
         } catch (error) {
-            req.logger.error("Error al eliminar usuarios inactivos:", error.message);
-            next(CustomError.createError({
-                name: "DeleteInactiveUsersError",
-                message: "Error al eliminar usuarios inactivos",
-                code: errorTypes.ERROR_INTERNAL_ERROR,
-                description: error.message
-            }));
+            logger.error("Error al obtener usuarios:", error.message);
+            res.status(500).json({ error: "Error interno del servidor" });
         }
-    }
+    },
+
+    deleteInactiveUsers: async (req, res) => {
+        try {
+            const result = await userService.deleteInactiveUsers();
+            res.status(200).json(result);
+        } catch (error) {
+            logger.error("Error al eliminar usuarios inactivos:", error.message);
+            res.status(500).json({ error: "Error interno del servidor" });
+        }
+    },
+
+    findById: async (req, res) => {
+        const userId = req.params.userId;
+        try {
+            const user = await userService.findById(userId);
+            res.status(200).json(user);
+        } catch (error) {
+            logger.error("Error al buscar usuario por ID:", error.message);
+            res.status(500).json({ error: "Error interno del servidor" });
+        }
+    },
 
     async updateUserRole(req, res, next) {
         const { userId } = req.params;
@@ -238,6 +162,6 @@ class UserController {
             }));
         }
     }
-}
+};
 
-export default UserController;
+export default userController;

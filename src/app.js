@@ -10,9 +10,10 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { addLogger } from "./utils/loggers-env.js";
 import cartService from "./dao/services/cartService.js";
 import cors from "cors"
+import { PORT } from "./utils.js"
 
 const app = express(); 
-const port = process.env.PORT || 8080;
+const port = PORT || 3000
 const server = app.listen(port, () => console.log("Servidor operando en puerto", port));
 
 app.use(cors());

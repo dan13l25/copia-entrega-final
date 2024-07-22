@@ -2,7 +2,7 @@ import userRepository from "../repositories/userRepositorie.js";
 import bcrypt from "bcrypt";
 import { generateToken } from "../../config/jwtConfig.js";
 import { createHash, isValidPassword, ADMIN_EMAIL, ADMIN_PASSWORD, EMAIL_USERNAME } from "../../utils.js";
-import UserDTO from "../dto/UserDTO.js";
+import UserDTO from "../DTO/UserDTO.js";
 import { devLogger as logger } from "../../utils/loggers.js";
 import crypto from "crypto";
 import { transporter } from "../../config/mailer.js";
@@ -169,9 +169,10 @@ class UserService {
         }
     }
 
-    async uploadDocuments(req, user, documents) {
+    async uploadDocuments(userId, documents) {
         try {
-            const updatedUser = await userRepository.uploadDocuments(req, user, documents);
+            const user = await userRepository.findById(userId);
+            const updatedUser = await userRepository.uploadDocuments(user, documents);
             return updatedUser;
         } catch (error) {
             logger.error("Error al actualizar documentos:", error.message);
@@ -182,35 +183,23 @@ class UserService {
     async upgradeToPremium(userId) {
         try {
             const user = await userRepository.findById(userId);
-            if (!user) {
-                throw new Error("Usuario no encontrado");
+            if (user.documents.length < 3) {
+                throw new Error("El usuario debe tener al menos 3 documentos cargados para ser promovido a premium");
             }
-
-            const requiredDocuments = ["Identificación", "Comprobante de domicilio", "Comprobante de estado de cuenta"];
-            const userDocuments = user.documents.map(doc => doc.name);
-
-            const hasAllRequiredDocuments = requiredDocuments.every(doc => userDocuments.includes(doc));
-
-            if (!hasAllRequiredDocuments) {
-                throw new Error("El usuario no ha cargado todos los documentos requeridos");
-            }
-
-            user.role = "premium";
-            await user.save();
-
-            return user;
+            const updatedUser = await userRepository.updateRole(userId, 'premium');
+            return updatedUser;
         } catch (error) {
-            logger.error("Error al actualizar usuario a premium:", error.message);
+            logger.error("Error al promover a usuario a premium:", error.message);
             throw error;
         }
     }
 
-    async getAllUsers() {
+    async getUsers() {
         try {
             const users = await userRepository.findAll();
             return users;
         } catch (error) {
-            logger.error("Error al obtener todos los usuarios:", error.message);
+            logger.error("Error al obtener usuarios:", error.message);
             throw error;
         }
     }
@@ -221,6 +210,16 @@ class UserService {
             return result;
         } catch (error) {
             logger.error("Error al eliminar usuarios inactivos:", error.message);
+            throw error;
+        }
+    }
+
+    async findById(userId) {
+        try {
+            const user = await userRepository.findById(userId, true);
+            return user;
+        } catch (error) {
+            logger.error("Error al buscar usuario por ID:", error.message);
             throw error;
         }
     }

@@ -1,13 +1,11 @@
 import express from 'express';
-import UserController from "../controllers/userController.js"
+import userController from '../controllers/userController.js';
 import passport from 'passport';
 import { configureDocumentMulter, configureProfileMulter  } from '../utils.js';
 
 const userRouter = express.Router();
 const documentUpload = configureDocumentMulter();
 const profileUpload = configureProfileMulter();
-const userController = new UserController(); 
-
 
 userRouter.get("/login", userController.getLogin.bind(userController));
 userRouter.post("/login", userController.login.bind(userController));
@@ -52,7 +50,7 @@ userRouter.get("/githubcallback", passport.authenticate("github", { failureRedir
 
 // Endpoints de entrega final
 
-userRouter.get("/", userController.getAllUsers.bind(userController));
+userRouter.get("/", userController.getUsers.bind(userController));
 userRouter.delete("/", userController.deleteInactiveUsers.bind(userController));
 userRouter.patch("/update-role", userController.updateUserRole.bind(userController));
 
@@ -81,5 +79,5 @@ userRouter.get("/failregister", async (req, res) => {
     res.send({ error: "Falló" });
   });*/ 
 
-
 export default userRouter;
+
