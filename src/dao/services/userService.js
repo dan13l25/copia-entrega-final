@@ -169,10 +169,9 @@ class UserService {
         }
     }
 
-    async uploadDocuments(userId, documents) {
+    async uploadDocuments(req, user, documents) {
         try {
-            const user = await userRepository.findById(userId);
-            const updatedUser = await userRepository.uploadDocuments(user, documents);
+            const updatedUser = await userRepository.uploadDocuments(req, user, documents);
             return updatedUser;
         } catch (error) {
             logger.error("Error al actualizar documentos:", error.message);
@@ -183,23 +182,35 @@ class UserService {
     async upgradeToPremium(userId) {
         try {
             const user = await userRepository.findById(userId);
-            if (user.documents.length < 3) {
-                throw new Error("El usuario debe tener al menos 3 documentos cargados para ser promovido a premium");
+            if (!user) {
+                throw new Error("Usuario no encontrado");
             }
-            const updatedUser = await userRepository.updateRole(userId, 'premium');
-            return updatedUser;
+
+            const requiredDocuments = ["Identificación", "Comprobante de domicilio", "Comprobante de estado de cuenta"];
+            const userDocuments = user.documents.map(doc => doc.name);
+
+            const hasAllRequiredDocuments = requiredDocuments.every(doc => userDocuments.includes(doc));
+
+            if (!hasAllRequiredDocuments) {
+                throw new Error("El usuario no ha cargado todos los documentos requeridos");
+            }
+
+            user.role = "premium";
+            await user.save();
+
+            return user;
         } catch (error) {
-            logger.error("Error al promover a usuario a premium:", error.message);
+            logger.error("Error al actualizar usuario a premium:", error.message);
             throw error;
         }
     }
 
-    async getUsers() {
+    async getAllUsers() {
         try {
             const users = await userRepository.findAll();
             return users;
         } catch (error) {
-            logger.error("Error al obtener usuarios:", error.message);
+            logger.error("Error al obtener todos los usuarios:", error.message);
             throw error;
         }
     }
@@ -210,16 +221,6 @@ class UserService {
             return result;
         } catch (error) {
             logger.error("Error al eliminar usuarios inactivos:", error.message);
-            throw error;
-        }
-    }
-
-    async findById(userId) {
-        try {
-            const user = await userRepository.findById(userId, true);
-            return user;
-        } catch (error) {
-            logger.error("Error al buscar usuario por ID:", error.message);
             throw error;
         }
     }

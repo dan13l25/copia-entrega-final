@@ -24,7 +24,7 @@ configureSwagger(app);
 connectMongoDB();
 
 // Configuración de Winston
-app.use(addLogger)
+app.use(addLogger);
 
 // Configuración de middlewares
 middlewareConfig(app);
